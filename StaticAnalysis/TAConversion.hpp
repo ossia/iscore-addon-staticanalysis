@@ -28,15 +28,13 @@ QString name(const Object& obj)
     std::reverse(path.vec().begin(), path.vec().end());
     for(ObjectIdentifier& elt : path.vec())
     {
-        if(elt.objectName() == "Scenario")
+        if(elt.objectName().contains("Scenario"))
             elt = ObjectIdentifier{"S", elt.id()};
-        else if(elt.objectName() == "EventModel")
+        else if(elt.objectName().contains("EventModel"))
             elt = ObjectIdentifier{"E", elt.id()};
-        else if(elt.objectName() == "ConstraintModel")
+        else if(elt.objectName().contains("ConstraintModel"))
             elt = ObjectIdentifier{"C", elt.id()};
-        else if(elt.objectName() == "BaseConstraintModel")
-            elt = ObjectIdentifier{"B", elt.id()};
-        else if(elt.objectName() == "TimeNodeModel")
+        else if(elt.objectName().contains("TimeNodeModel"))
             elt = ObjectIdentifier{"T", elt.id()};
     }
 
