@@ -81,7 +81,7 @@ class LanguageVisitor<Scenario::ScenarioModel>
         template<typename T>
         QString id(const T& c)
         {
-            return QString(T::description()) + QString::number(c.id_val());
+            return QString(Metadata<Description_k, T>::get()) + QString::number(c.id_val());
         }
 
         QString duration(const Scenario::ConstraintModel& c)
@@ -309,7 +309,7 @@ class HalsteadVisitor<Scenario::ScenarioModel>
         template<typename T>
         QString id(const T& c)
         {
-            return QString(T::description()) + QString::number(c.id_val());
+            return QString(Metadata<Description_k, T>::get()) + QString::number(c.id_val());
         }
 
         void duration(const Scenario::ConstraintModel& c)
