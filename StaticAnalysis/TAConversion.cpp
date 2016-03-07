@@ -16,7 +16,7 @@ namespace stal
 namespace TA
 {
 template<typename Container, typename Stream>
-void print(const Container& vec, Stream& s)
+static void print(const Container& vec, Stream& s)
 {
     for(const auto& elt : vec)
     {
@@ -27,7 +27,7 @@ void print(const Container& vec, Stream& s)
 }
 
 template<typename Stream>
-void print(const Point& pt, Stream& stream)
+static void print(const Point& pt, Stream& stream)
 {
     QString s = QString("%1 = Point(%2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12, %13);\n")
             .arg(pt.name)
@@ -48,7 +48,7 @@ void print(const Point& pt, Stream& stream)
 }
 
 template<typename Stream>
-void print(const Mix& pt, Stream& stream)
+static void print(const Mix& pt, Stream& stream)
 {
     QString s = QString("%1 = Mix(%2, %3, %4, %5);\n")
             .arg(pt.name)
@@ -62,7 +62,7 @@ void print(const Mix& pt, Stream& stream)
 
 
 template<typename Stream>
-void print(const Control& pt, Stream& stream)
+static void print(const Control& pt, Stream& stream)
 {
     QString s = QString("%1 = Control(%2, %3, %4, %5, %6, %7, %8);\n")
             .arg(pt.name)
@@ -80,7 +80,7 @@ void print(const Control& pt, Stream& stream)
 
 
 template<typename Stream>
-void print(const Flexible& c, Stream& stream)
+static void print(const Flexible& c, Stream& stream)
 {
     QString s = QString("%1 = Flexible(%2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12);\n")
             .arg(c.name)
@@ -103,7 +103,7 @@ void print(const Flexible& c, Stream& stream)
 }
 
 template<typename Stream>
-void print(const Rigid& c, Stream& stream)
+static void print(const Rigid& c, Stream& stream)
 {
     QString s = QString("%1 = Rigid(%2, %3, %4, %5, %6, %7, %8, %9);\n")
             .arg(c.name)
@@ -123,7 +123,7 @@ void print(const Rigid& c, Stream& stream)
 
 
 template<typename Stream>
-void print(const Event& c, Stream& stream)
+static void print(const Event& c, Stream& stream)
 {
     QString s = QString("%1 = Event(%2, %3, %4, %5);\n")
             .arg(c.name)
@@ -135,7 +135,7 @@ void print(const Event& c, Stream& stream)
     stream << s.toLatin1().constData();
 }
 
-QString print(const ScenarioContent& c)
+static QString print(const ScenarioContent& c)
 {
     QFile f(":/model-uppaal.xml.in");
     ISCORE_ASSERT(f.exists());
@@ -189,7 +189,7 @@ QString print(const ScenarioContent& c)
     return str;
 }
 
-void insert(TA::ScenarioContent& source, TA::ScenarioContent& dest)
+static void insert(TA::ScenarioContent& source, TA::ScenarioContent& dest)
 {
     dest.rigids.splice(dest.rigids.end(), source.rigids);
     dest.flexibles.splice(dest.flexibles.end(), source.flexibles);
@@ -206,7 +206,7 @@ void insert(TA::ScenarioContent& source, TA::ScenarioContent& dest)
 
 
 template<typename T>
-void visitProcesses(
+static void visitProcesses(
         const Scenario::ConstraintModel& c,
         const T& ta_cst,
         TA::ScenarioContent& content)

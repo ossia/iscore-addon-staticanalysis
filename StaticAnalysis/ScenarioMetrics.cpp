@@ -262,7 +262,7 @@ struct ScenarioFactors
         }
 };
 
-int sum_unique(const std::vector<int>& vec)
+static int sum_unique(const std::vector<int>& vec)
 {
     int val = 0;
     for(int e : vec)
@@ -272,7 +272,7 @@ int sum_unique(const std::vector<int>& vec)
     return val;
 }
 
-int sum_all(const std::vector<int>& vec)
+static int sum_all(const std::vector<int>& vec)
 {
     return std::accumulate(vec.begin(), vec.end(), 0);
 }
@@ -722,7 +722,7 @@ class ProgramVisitor
 
 };
 
-auto startingTimeNodes(const Program& program, const Scenario::ScenarioModel& scenario)
+static auto startingTimeNodes(const Program& program, const Scenario::ScenarioModel& scenario)
 {
     std::list<Id<Scenario::TimeNodeModel>> startingNodes;
     for(const auto& node_id : program.nodes)
