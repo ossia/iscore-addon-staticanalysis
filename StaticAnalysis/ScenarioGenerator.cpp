@@ -2,8 +2,12 @@
 #include <Scenario/Commands/Scenario/Creations/CreateState.hpp>
 #include <Scenario/Commands/Scenario/Creations/CreateConstraint_State_Event_TimeNode.hpp>
 #include <Scenario/Commands/Scenario/Creations/CreateEvent_State.hpp>
+#include <Scenario/Commands/Scenario/Creations/CreateConstraint.hpp>
+#include <Scenario/Commands/TimeNode/AddTrigger.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
+#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <iscore/tools/ModelPathSerialization.hpp>
 #include  <random>
 #include  <iterator>
 // http://stackoverflow.com/a/16421677/1495627
@@ -83,6 +87,34 @@ void generateScenario(
             default:
                 break;
         }
+    }
+    for(int i = 0; i < N/3; i++)
+    {
+        StateModel& state1 = *selector(scenar.states.get());
+        StateModel& state2 = *selector(scenar.states.get());
+        auto& tn1 = Scenario::parentTimeNode(state1, scenar);
+        auto t1 = tn1.date();
+        auto& tn2 = Scenario::parentTimeNode(state2, scenar);
+        auto t2 = tn2.date();
+        if(t1 < t2)
+        {
+            if(!state2.previousConstraint() && !state1.nextConstraint())
+                disp.submitCommand(new Command::CreateConstraint(scenar, state1.id(), state2.id()));
+        }
+        else if (t1 > t2)
+        {
+            if(!state1.previousConstraint() && !state2.nextConstraint())
+                disp.submitCommand(new Command::CreateConstraint(scenar, state2.id(), state1.id()));
+        }
+    }
+    for(auto i = 0; i < N/5; i++)
+    {
+        StateModel& state1 = *selector(scenar.states.get());
+        auto& tn1 = Scenario::parentTimeNode(state1, scenar);
+
+        if(tn1.hasTrigger())
+            continue;
+        disp.submitCommand(new Command::AddTrigger<ScenarioModel>(tn1));
     }
 }
 }

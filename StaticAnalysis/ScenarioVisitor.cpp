@@ -32,10 +32,14 @@
 #include <QApplication>
 #include <QJsonDocument>
 #include <QFile>
+#include <QFileDialog>
+#include <QSaveFile>
 #include <StaticAnalysis/TAConversion.hpp>
 #include <Scenario/Application/Menus/TextDialog.hpp>
 #include <StaticAnalysis/ScenarioMetrics.hpp>
 #include <StaticAnalysis/ScenarioGenerator.hpp>
+#include <StaticAnalysis/TIKZConversion.hpp>
+
 stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app):
     iscore::GUIApplicationContextPlugin(app, "TemporalAutomatasApplicationPlugin", nullptr)
 {
@@ -55,6 +59,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app
             return;
 
         CommandDispatcher<> disp(doc->context().commandStack);
+        /*
         for(int set = 0; set < 100; set++)
         {
             for(int n = 5; n < 80; n++)
@@ -83,6 +88,9 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app
                 }
             }
         }
+            */
+        stal::generateScenario(*firstScenario, 300, disp);
+
     });
     m_convert = new QAction{tr("Convert to Temporal Automatas"), nullptr};
     connect(m_convert, &QAction::triggered, [&] () {
@@ -133,6 +141,43 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app
         Scenario::TextDialog dial(str, qApp->activeWindow());
         dial.exec();
     });
+
+    m_TIKZexport = new QAction{tr("Export in TIKZ"), nullptr};
+    connect(m_TIKZexport, &QAction::triggered, [&] () {
+        auto doc = currentDocument();
+        if(!doc)
+            return;
+        Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+        auto& baseScenario = static_cast<Scenario::ScenarioModel&>(*base.baseScenario().constraint().processes.begin());
+
+        QFileDialog d{qApp->activeWindow(), tr("Save Document As")};
+        d.setNameFilter(("tex files (*.tex)"));
+        d.setConfirmOverwrite(true);
+        d.setFileMode(QFileDialog::AnyFile);
+        d.setAcceptMode(QFileDialog::AcceptSave);
+
+        if(d.exec())
+        {
+            auto files = d.selectedFiles();
+            QString savename = files.first();
+            QString name = savename;
+            name.remove(0, savename.lastIndexOf("/") + 1);
+            name.remove(".tex");
+            if(!savename.isEmpty())
+            {
+                if(!savename.contains(".tex"))
+                    savename += ".tex";
+
+                QSaveFile f{savename};
+                f.open(QIODevice::WriteOnly);
+
+                QString tex = makeTIKZ(name, baseScenario);
+                f.write(tex.toUtf8());
+                f.commit();
+            }
+        }
+
+    });
 }
 
 void stal::ApplicationPlugin::populateMenus(iscore::MenubarManager* menus)
@@ -146,4 +191,7 @@ void stal::ApplicationPlugin::populateMenus(iscore::MenubarManager* menus)
     menus->insertActionIntoToplevelMenu(
                 iscore::ToplevelMenuElement::FileMenu,
                 m_metrics);
+    menus->insertActionIntoToplevelMenu(
+                iscore::ToplevelMenuElement::FileMenu,
+                m_TIKZexport);
 }
