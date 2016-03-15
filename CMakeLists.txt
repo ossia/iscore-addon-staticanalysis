@@ -10,6 +10,7 @@ set(HDRS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioVisitor.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioGenerator.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TAConversion.hpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TIKZConversion.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/iscore_plugin_staticanalysis.hpp"
 )
 set(SRCS
