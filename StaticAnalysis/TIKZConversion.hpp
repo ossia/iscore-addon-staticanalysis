@@ -8,7 +8,7 @@
 
 QString makeTIKZ(QString name, Scenario::ScenarioModel& scenario)
 {
-    int HEIGHT = 100;
+    int HEIGHT = 75;
     QString texString;
 
     texString += "\\def\\schemaScenario " + name + "{%\n";
