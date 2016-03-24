@@ -6,6 +6,7 @@
 #include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 
+QString makeTIKZ(QString name, Scenario::ScenarioModel& scenario);
 QString makeTIKZ(QString name, Scenario::ScenarioModel& scenario)
 {
     int HEIGHT = 75;
