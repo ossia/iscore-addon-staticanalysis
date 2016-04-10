@@ -6,6 +6,12 @@
 #include <set>
 #include <eggs/variant.hpp>
 
+#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <Scenario/Process/ScenarioModel.hpp>
+#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/State/StateModel.hpp>
+#include <Scenario/Document/Event/EventModel.hpp>
+#include <Scenario/Process/ScenarioProcessMetadata.hpp>
 namespace Scenario
 {
 class TimeNodeModel;
@@ -28,13 +34,13 @@ QString name(const Object& obj)
     std::reverse(path.vec().begin(), path.vec().end());
     for(ObjectIdentifier& elt : path.vec())
     {
-        if(elt.objectName().contains("Scenario"))
+        if(elt.objectName() == Metadata<ObjectKey_k, Scenario::ProcessModel>::get())
             elt = ObjectIdentifier{"S", elt.id()};
-        else if(elt.objectName().contains("EventModel"))
+        else if(elt.objectName() == Metadata<ObjectKey_k, Scenario::EventModel>::get())
             elt = ObjectIdentifier{"E", elt.id()};
-        else if(elt.objectName().contains("ConstraintModel"))
+        else if(elt.objectName().contains("Constraint"))
             elt = ObjectIdentifier{"C", elt.id()};
-        else if(elt.objectName().contains("TimeNodeModel"))
+        else if(elt.objectName() == Metadata<ObjectKey_k, Scenario::TimeNodeModel>::get())
             elt = ObjectIdentifier{"T", elt.id()};
     }
 
