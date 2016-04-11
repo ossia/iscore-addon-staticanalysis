@@ -40,6 +40,9 @@ static void print(const Point& pt, Stream& stream)
             .arg(pt.skip)
             .arg(pt.event_t);
 
+    if(!pt.comment.isEmpty())
+        stream << "// " << pt.comment.toLatin1().constData() << "\n";
+
     stream << s.toLatin1().constData();
 }
 
@@ -130,6 +133,20 @@ static void print(const Event& c, Stream& stream)
 
     stream << s.toLatin1().constData();
 }
+
+template<typename Stream>
+static void print(const Event_ND& c, Stream& stream)
+{
+    QString s = QString("%1 = Event_ND(%2, %3, %4, %5);\n")
+            .arg(c.name)
+            .arg(c.message)
+            .arg(c.event)
+            .arg((int)c.date.msec())
+            .arg(c.val);
+
+    stream << s.toLatin1().constData();
+}
+
 
 static QString print(const ScenarioContent& c)
 {
@@ -382,7 +399,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
 
 
     // If there is a trigger we create a corresponding event.
-    if(timenode.trigger()->active())
+
     {
         TA::Event_ND node_event{
             "EventND_" + tn_name,
@@ -394,7 +411,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
 
         scenario.events_nd.push_back(node_event);
     }
-    else
+    if(! timenode.trigger()->active())
     {
         // TODO
         TA::Mix point_start_mix{
@@ -410,6 +427,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
         scenario.mixs.push_back(point_start_mix);
     }
 
+    tn_point.comment = "TimeNode Name : " + timenode.metadata.name() + ". Label : " + timenode.metadata.label();
 
     /*
     // We create a flexible that will go to each event of the timenode.
@@ -472,6 +490,7 @@ void TAVisitor::visit(const Scenario::EventModel &event)
 
     point.urgent = true;
 
+    point.comment = "EventNode Name : " + event.metadata.name() + ". Label : " + event.metadata.label();
     if(!event.condition().hasChildren())
     {
         // No condition
@@ -485,6 +504,17 @@ void TAVisitor::visit(const Scenario::EventModel &event)
 
         scenario.mixs.push_back(point_start_mix);
     }
+
+    TA::Event_ND node_event{
+        "EventND_" + event_name,
+                point.conditionMessage,
+                point.event,
+                timenode.date(), // TODO throw a rand
+                0
+    };
+
+    scenario.events_nd.push_back(node_event);
+
     scenario.points.push_back(point);
 
     scenario.bools.insert(point.en);

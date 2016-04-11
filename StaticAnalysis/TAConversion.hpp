@@ -68,7 +68,25 @@ struct Event
     TimeValue date{};
     int val{};
 };
-using Event_ND = Event;
+
+struct Event_ND
+{
+    Event_ND(QString n, IntVariable a, BroadcastVariable b, TimeValue c, int d):
+        name{n},
+        message{a},
+        event{b},
+        date{c},
+        val{d}
+    {
+
+    }
+
+    QString name;
+    IntVariable message{};
+    BroadcastVariable event{};
+    TimeValue date{};
+    int val{};
+};
 
 struct Mix
 {
@@ -151,6 +169,8 @@ struct Point
 
     BroadcastVariable skip;
     BroadcastVariable event_t;
+
+    QString comment;
 };
 
 
