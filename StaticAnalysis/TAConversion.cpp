@@ -184,6 +184,7 @@ static QString print(const ScenarioContent& c)
         output << "system\n";
         for_each_in_tuple(std::tie(
                               c.events,
+                              c.events_nd,
                               c.rigids,
                               c.flexibles,
                               c.points,
@@ -508,7 +509,7 @@ void TAVisitor::visit(const Scenario::EventModel &event)
     TA::Event_ND node_event{
         "EventND_" + event_name,
                 point.conditionMessage,
-                point.event,
+                point.event_e,
                 timenode.date(), // TODO throw a rand
                 0
     };
