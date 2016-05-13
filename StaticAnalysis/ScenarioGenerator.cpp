@@ -8,6 +8,14 @@
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
 #include <iscore/tools/ModelPathSerialization.hpp>
+#include <Loop/LoopProcessModel.hpp>
+
+#include <Scenario/Process/ScenarioProcessMetadata.hpp>
+#include <Scenario/Commands/Constraint/AddProcessToConstraint.hpp>
+
+#include <Scenario/Process/Algorithms/Accessors.hpp>
+#include <Scenario/Process/Algorithms/ContainersAccessors.hpp>
+#include <Scenario/Commands/TimeNode/SetTrigger.hpp>
 #include  <random>
 #include  <iterator>
 // http://stackoverflow.com/a/16421677/1495627
@@ -44,6 +52,66 @@ struct random_selector
     private:
         RandomGenerator gen;
 };
+
+void generateHimitoScenario(
+        const Scenario::ScenarioModel& scenar,
+        CommandDispatcher<>& disp
+        )
+{
+    using namespace Scenario;
+    using namespace Scenario::Command;
+
+    auto& first_state = *states(scenar).begin();
+
+    // 1. Create an empty box
+    auto state_command = new CreateConstraint_State_Event_TimeNode(
+                scenar, // The scenario
+                first_state.id(), // Start state
+                TimeValue::fromMsecs(2000), // Duration
+                0.5); // Height in %
+
+    disp.submitCommand(state_command);
+
+    // Get the State & constraint that were created
+    auto& new_state = scenar.state(state_command->createdState());
+    auto& new_constraint = scenar.constraint(state_command->createdConstraint());
+
+    // Get the time node of this state
+    auto& new_timenode = parentTimeNode(new_state, scenar);
+
+    // 3. Create a trigger on the end time node
+    auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(new_timenode);
+    disp.submitCommand(trigger_command);
+
+    // Try to parse an expression; if it is correctly parsed, add the time node
+    auto maybe_parsed_expression = State::parseExpression("(a:/b < 1234)");
+    if(maybe_parsed_expression)
+    {
+        // 4. Set the expression to the trigger
+        auto expr_command = new SetTrigger(new_timenode, *maybe_parsed_expression);
+        disp.submitCommand(expr_command);
+    }
+
+    //5. Create a loop
+    using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoRacks>>;
+    auto create_loop = new CreateProcess(
+                new_constraint, // Where to create
+                Metadata<ConcreteFactoryKey_k, Loop::ProcessModel>::get()); // What to create
+    disp.submitCommand(create_loop);
+
+    // Get the loop process
+    auto& loop = dynamic_cast<Loop::ProcessModel&>(new_constraint.processes.at(create_loop->processId()));
+
+    // Get the pattern constraint of the loop
+    auto& pattern = loop.constraint();
+
+    // 6. Create a scenario in the pattern
+    auto create_scenario = new CreateProcess(
+                pattern,
+                Metadata<ConcreteFactoryKey_k, Scenario::ProcessModel>::get());
+    disp.submitCommand(create_scenario);
+
+}
 
 void generateScenario(
         const Scenario::ScenarioModel& scenar,

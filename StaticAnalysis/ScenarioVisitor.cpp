@@ -43,6 +43,26 @@
 stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app):
     iscore::GUIApplicationContextPlugin(app, "TemporalAutomatasApplicationPlugin", nullptr)
 {
+    m_himito = new QAction{tr("Generate Himito score"), nullptr};
+    connect(m_himito, &QAction::triggered, [&] () {
+
+        auto doc = currentDocument();
+        if(!doc)
+            return;
+        Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+
+        const auto& baseConstraint = base.baseScenario().constraint();
+        if(baseConstraint.processes.size() == 0)
+            return;
+
+        auto firstScenario = dynamic_cast<Scenario::ScenarioModel*>(&*baseConstraint.processes.begin());
+        if(!firstScenario)
+            return;
+
+        CommandDispatcher<> disp(doc->context().commandStack);
+
+        stal::generateHimitoScenario(*firstScenario, disp);
+    });
     m_generate = new QAction{tr("Generate random score"), nullptr};
     connect(m_generate, &QAction::triggered, [&] () {
         auto doc = currentDocument();
@@ -182,6 +202,9 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app
 
 void stal::ApplicationPlugin::populateMenus(iscore::MenubarManager* menus)
 {
+    menus->insertActionIntoToplevelMenu(
+                iscore::ToplevelMenuElement::FileMenu,
+                m_himito);
     menus->insertActionIntoToplevelMenu(
                 iscore::ToplevelMenuElement::FileMenu,
                 m_generate);

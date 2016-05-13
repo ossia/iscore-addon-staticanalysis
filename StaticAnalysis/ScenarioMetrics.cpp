@@ -1079,7 +1079,7 @@ stal::Metrics::Cyclomatic::Factors stal::Metrics::Cyclomatic::ComputeFactors2(
         CyclomaticVisitor vis2(program, scenar);
         auto blocks = vis2.blocks();
 
-        for(int i = 0U; i < blocks.size(); i++)
+        for(auto i = 0U; i < blocks.size(); i++)
         {
             const auto& block = blocks[i];
             N += 1;

@@ -11,4 +11,9 @@ namespace stal
             const Scenario::ScenarioModel& scenar,
             int N,
             CommandDispatcher<>&);
+
+    void generateHimitoScenario(
+            const Scenario::ScenarioModel& scenar,
+            CommandDispatcher<>& disp
+            );
 }
