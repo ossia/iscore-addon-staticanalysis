@@ -69,7 +69,7 @@ class Transition{
     QString name;
 };
 
-auto& createTransition(
+auto& createConstraint(
     CommandDispatcher<>& disp,
     const Scenario::ScenarioModel& scenario,
     const Scenario::StateModel& startState,
@@ -88,14 +88,42 @@ auto& createTransition(
   disp.submitCommand(state_command);
 
   auto& new_state = scenario.state(state_command->createdState());
-  // auto& new_constraint = scenario.constraint(state_command->createdConstraint());
-  auto& new_timenode = parentTimeNode(new_state, scenario);
-
-  auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(new_timenode);
-  disp.submitCommand(trigger_command);
-
   return new_state;
 }
+
+auto& createPlace(
+    CommandDispatcher<>& disp,
+    const Scenario::ScenarioModel& scenario,
+    const Scenario::StateModel& startState,
+    double posY
+    )
+{
+  using namespace Scenario;
+  using namespace Scenario::Command;
+
+  auto new_state_cmd = new CreateState(scenario, Scenario::parentEvent(startState, scenario).id(), posY);
+  disp.submitCommand(new_state_cmd);
+  auto& new_state = scenario.state(new_state_cmd->createdState());
+  auto& state_place = createConstraint(disp, scenario, new_state, posY);
+  return state_place;
+}
+
+auto& createTransition(
+    CommandDispatcher<>& disp,
+    const Scenario::ScenarioModel& scenario,
+    const Scenario::StateModel& startState,
+    double posY
+    )
+{
+  using namespace Scenario;
+  using namespace Scenario::Command;
+  auto& new_state = createConstraint(disp, scenario, startState, posY);
+  auto& new_timenode = parentTimeNode(new_state, scenario);
+  auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(new_timenode);
+  disp.submitCommand(trigger_command);
+  return new_state;
+}
+
 
 void generateScenarioFromPetriNet(
         const Scenario::ScenarioModel& scenario,
@@ -130,16 +158,6 @@ void generateScenarioFromPetriNet(
     auto& first_state = *states(scenario).begin();
     auto& state_initial_transition = createTransition(disp, scenario, first_state, 0.1);
 
-    // To create a synchronized state
-    // 1. Create a state on the same evnet than the end state
-    auto new_state_cmd = new CreateState(scenario, Scenario::parentEvent(state_initial_transition, scenario).id(), 0.2);
-    disp.submitCommand(new_state_cmd);
-    auto& new_state = scenario.state(new_state_cmd->createdState());
-
-
-    auto& state_transition = createTransition(disp, scenario, new_state,  0.3);
-    return;
-
     // create loops for each place
     // Load Places
     QJsonArray placesArray = json["places"].toArray();
@@ -152,7 +170,8 @@ void generateScenarioFromPetriNet(
         // p.pos = pObject["post"].toArray();
         // places.append(p);
         qWarning() << pObject;
-        auto& state_transition = createTransition(disp, scenario, new_state, pIndex * 0.1);
+        double pos_y = pIndex * 0.1 + 0.2;
+        auto& state_place = createPlace(disp, scenario, state_initial_transition, pos_y);
     }
 
     // Create the initial transition
