@@ -61,16 +61,17 @@ class Transition{
   public:
     QString name;
 
+  friend bool operator==(const Transition& t, const QString& other)
+  {
+      return t.name == other;
+  }
+
+  friend bool operator!=(const Transition& t, const QString& other)
+  {
+      return t.name != other;
+  }
 };
 
-inline bool operator==(const Transition& t, const QString& other)
-{
-    return t.name == other;
-}
-inline bool operator!=(const Transition& t, const QString& other)
-{
-    return t.name != other;
-}
 auto createConstraint(
     CommandDispatcher<>& disp,
     const Scenario::ScenarioModel& scenario,
@@ -82,14 +83,34 @@ auto createConstraint(
   using namespace Scenario;
   using namespace Scenario::Command;
 
+  // Create the synchronized event
+  auto new_state_cmd = new CreateState(scenario, Scenario::parentEvent(startState, scenario).id(), posY);
+  disp.submitCommand(new_state_cmd);
+  auto& new_state = scenario.state(new_state_cmd->createdState());
+
   auto state_command = new CreateConstraint_State_Event_TimeNode(
               scenario,                   // scenario
-              startState.id(),           // start state id
-              Scenario::parentEvent(startState, scenario).date() + TimeValue::fromMsecs(2000), // duration
+              new_state.id(),             // start state id
+              Scenario::parentEvent(new_state, scenario).date() + TimeValue::fromMsecs(4000), // duration
               posY);                       // y-pos in %
   disp.submitCommand(state_command);
 
   return state_command;
+}
+
+
+void createTrigger(
+    CommandDispatcher<>& disp,
+    const Scenario::ScenarioModel& scenario,
+    const Scenario::StateModel& state)
+{
+  using namespace Scenario;
+  using namespace Scenario::Command;
+
+  // Create the trigger point
+  auto& timenode = parentTimeNode(state, scenario);
+  auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(timenode);
+  disp.submitCommand(trigger_command);
 }
 
 auto& createPlace(
@@ -102,33 +123,35 @@ auto& createPlace(
   using namespace Scenario;
   using namespace Scenario::Command;
 
-  // Create the synchronized event
-  auto new_state_cmd = new CreateState(scenario, Scenario::parentEvent(startState, scenario).id(), posY);
-  disp.submitCommand(new_state_cmd);
-  auto& new_state = scenario.state(new_state_cmd->createdState());
-
   // Create constraint
-  auto state_place_cmd = createConstraint(disp, scenario, new_state, posY);
-  auto& state_place = scenario.state(state_place_cmd->createdState());
+  auto state_place_cmd = createConstraint(disp, scenario, startState, posY);
+  auto& loop_state = scenario.state(state_place_cmd->createdState());
+  createTrigger(disp, scenario, loop_state);
 
   // Create the loop
   using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoRacks>>;
   auto& new_constraint = scenario.constraint(state_place_cmd->createdConstraint());
-  auto create_loop = new CreateProcess(
+  auto create_loop_cmd = new CreateProcess(
               new_constraint,
               Metadata<ConcreteFactoryKey_k, Loop::ProcessModel>::get());
-  disp.submitCommand(create_loop);
+  disp.submitCommand(create_loop_cmd);
 
-  // Create loop constraint
-  auto& loop = dynamic_cast<Loop::ProcessModel&>(new_constraint.processes.at(create_loop->processId()));
+  // Create loop pattern
+  auto& loop = dynamic_cast<Loop::ProcessModel&>(new_constraint.processes.at(create_loop_cmd->processId()));
   auto& pattern = loop.constraint();
 
-  auto create_scenario = new CreateProcess(
+  // TODO: Change this
+  auto& pattern_state = scenario.state(pattern.endState());
+  createTrigger(disp, scenario, pattern_state);
+
+  auto create_scenario_cmd = new CreateProcess(
               pattern,
               Metadata<ConcreteFactoryKey_k, Scenario::ProcessModel>::get());
-  disp.submitCommand(create_scenario);
+  disp.submitCommand(create_scenario_cmd);
 
-  return state_place;
+  auto& scenario_pattern = static_cast<Scenario::ScenarioModel&>(pattern.processes.at(create_scenario_cmd->processId()));
+
+  return scenario_pattern;
 }
 
 auto& createTransition(
@@ -144,11 +167,9 @@ auto& createTransition(
   // Create the constraint
   auto state_command = createConstraint(disp, scenario, startState, posY);
   auto& new_state = scenario.state(state_command->createdState());
-  auto& new_timenode = parentTimeNode(new_state, scenario);
 
   // Create the trigger point
-  auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(new_timenode);
-  disp.submitCommand(trigger_command);
+  createTrigger(disp, scenario, new_state);
 
   return new_state;
 }
@@ -187,29 +208,9 @@ void generateScenarioFromPetriNet(
         tList.append(t);
     }
 
-    { // Case 1 with a lambda-function
-        QString truc;
-
-        auto elt_it = find_if(tList, [&] (auto elt) {
-            return elt.name == truc;
-        });
-        if(elt_it != tList.end())
-        {
-            qDebug() << elt_it->name;
-        }
-    }
-
-    { // Case 2 with comparator
-        auto elt_it = find(tList, "blah");
-        if(elt_it != tList.end())
-        {
-            qDebug() << elt_it->name;
-        }
-    }
-
     // initial state of the scenario
     auto& first_state = *states(scenario).begin();
-    auto& state_initial_transition = createTransition(disp, scenario, first_state, 0.2);
+    auto& state_initial_transition = createTransition(disp, scenario, first_state, 0.02);
 
     // create loops for each place
     // Load Places
@@ -217,8 +218,8 @@ void generateScenarioFromPetriNet(
     for (int pIndex = 0; pIndex < placesArray.size(); ++pIndex) {
         QJsonObject pObject = placesArray[pIndex].toObject();
         qWarning() << pObject;
-        QVariantList pos_transitions = pObject["post"].toArray().toVariantList();
-        QVariantList pre_transitions = pObject["pre"].toArray().toVariantList();
+        QJsonArray pos_transitions = pObject["post"].toArray();
+        QJsonArray pre_transitions = pObject["pre"].toArray();
 
         if (pos_transitions.empty()){               // Final Place
           qWarning() << "It's a final place";
@@ -226,16 +227,29 @@ void generateScenarioFromPetriNet(
           qWarning() << "It's an initial place";
         } else {                                    // Segmentation Place
           double pos_y = pIndex * 0.1 + 0.1;
-          auto& state_place = createPlace(disp, scenario, state_initial_transition, pos_y);
-/*
+
+          auto& scenario_place = createPlace(disp, scenario, state_initial_transition, pos_y);
+          auto& start_state_id = *scenario_place.startEvent().states().begin();
+          auto& place_start_state = scenario_place.states.at(start_state_id);;
+
+          auto& state_transition = createTransition(disp, scenario_place, place_start_state, 0.4);
+
           // Add post transitions of the place
-          int indexT = tList.indexOf();
-          if (indexT != -1){
+          for (int tIndex = 0; tIndex < pos_transitions.size(); ++tIndex) {
+            QString tName = pos_transitions[tIndex].toString();
+            auto elt_it = find(tList, tName);
+            if (elt_it != tList.end()) {
+                qDebug() << elt_it->name;
 
+                // Create the synchronized event
+                double pos_t = tIndex * 0.4 + 0.8;
+
+                createTransition(disp, scenario_place, state_transition, pos_t);
+
+            }
           }
-*/        }
+        }
     }
-
 }
 
 void generateScenario(
