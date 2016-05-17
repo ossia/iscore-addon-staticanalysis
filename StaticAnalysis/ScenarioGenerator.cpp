@@ -130,6 +130,16 @@ void generateScenarioFromPetriNet(
     auto& first_state = *states(scenario).begin();
     auto& state_initial_transition = createTransition(disp, scenario, first_state, 0.1);
 
+    // To create a synchronized state
+    // 1. Create a state on the same evnet than the end state
+    auto new_state_cmd = new CreateState(scenario, Scenario::parentEvent(state_initial_transition, scenario).id(), 0.2);
+    disp.submitCommand(new_state_cmd);
+    auto& new_state = scenario.state(new_state_cmd->createdState());
+
+
+    auto& state_transition = createTransition(disp, scenario, new_state,  0.3);
+    return;
+
     // create loops for each place
     // Load Places
     QJsonArray placesArray = json["places"].toArray();
@@ -142,7 +152,7 @@ void generateScenarioFromPetriNet(
         // p.pos = pObject["post"].toArray();
         // places.append(p);
         qWarning() << pObject;
-        auto& state_transition = createTransition(disp, scenario, state_initial_transition, pIndex * 0.1);
+        auto& state_transition = createTransition(disp, scenario, new_state, pIndex * 0.1);
     }
 
     // Create the initial transition
