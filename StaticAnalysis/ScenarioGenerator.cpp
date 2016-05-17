@@ -69,7 +69,7 @@ class Transition{
     QString name;
 };
 
-auto& createConstraint(
+auto createConstraint(
     CommandDispatcher<>& disp,
     const Scenario::ScenarioModel& scenario,
     const Scenario::StateModel& startState,
@@ -87,8 +87,7 @@ auto& createConstraint(
               posY);                       // y-pos in %
   disp.submitCommand(state_command);
 
-  auto& new_state = scenario.state(state_command->createdState());
-  return new_state;
+  return state_command;
 }
 
 auto& createPlace(
@@ -101,10 +100,32 @@ auto& createPlace(
   using namespace Scenario;
   using namespace Scenario::Command;
 
+  // Create the synchronized event
   auto new_state_cmd = new CreateState(scenario, Scenario::parentEvent(startState, scenario).id(), posY);
   disp.submitCommand(new_state_cmd);
   auto& new_state = scenario.state(new_state_cmd->createdState());
-  auto& state_place = createConstraint(disp, scenario, new_state, posY);
+
+  // Create constraint
+  auto state_place_cmd = createConstraint(disp, scenario, new_state, posY);
+  auto& state_place = scenario.state(state_place_cmd->createdState());
+
+  // Create the loop
+  using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoRacks>>;
+  auto& new_constraint = scenario.constraint(state_place_cmd->createdConstraint());
+  auto create_loop = new CreateProcess(
+              new_constraint,
+              Metadata<ConcreteFactoryKey_k, Loop::ProcessModel>::get());
+  disp.submitCommand(create_loop);
+
+  // Create loop constraint
+  auto& loop = dynamic_cast<Loop::ProcessModel&>(new_constraint.processes.at(create_loop->processId()));
+  auto& pattern = loop.constraint();
+
+  auto create_scenario = new CreateProcess(
+              pattern,
+              Metadata<ConcreteFactoryKey_k, Scenario::ProcessModel>::get());
+  disp.submitCommand(create_scenario);
+
   return state_place;
 }
 
@@ -117,10 +138,16 @@ auto& createTransition(
 {
   using namespace Scenario;
   using namespace Scenario::Command;
-  auto& new_state = createConstraint(disp, scenario, startState, posY);
+
+  // Create the constraint
+  auto state_command = createConstraint(disp, scenario, startState, posY);
+  auto& new_state = scenario.state(state_command->createdState());
   auto& new_timenode = parentTimeNode(new_state, scenario);
+
+  // Create the trigger point
   auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(new_timenode);
   disp.submitCommand(trigger_command);
+
   return new_state;
 }
 
@@ -170,7 +197,7 @@ void generateScenarioFromPetriNet(
         // p.pos = pObject["post"].toArray();
         // places.append(p);
         qWarning() << pObject;
-        double pos_y = pIndex * 0.1 + 0.2;
+        double pos_y = pIndex * 0.3 + 0.2;
         auto& state_place = createPlace(disp, scenario, state_initial_transition, pos_y);
     }
 
