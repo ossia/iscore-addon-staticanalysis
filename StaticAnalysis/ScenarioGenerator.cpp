@@ -178,6 +178,15 @@ void generateScenarioFromPetriNet(
         tList.append(t);
     }
 
+    QString truc;
+    auto elt_it = find_if(tList, [&] (auto elt) {
+        return elt.name == truc;
+    });
+    if(elt_it != tList.end())
+    {
+        qDebug() << elt_it->name;
+    }
+
     // initial state of the scenario
     auto& first_state = *states(scenario).begin();
     auto& state_initial_transition = createTransition(disp, scenario, first_state, 0.2);
@@ -198,13 +207,13 @@ void generateScenarioFromPetriNet(
         } else {                                    // Segmentation Place
           double pos_y = pIndex * 0.1 + 0.1;
           auto& state_place = createPlace(disp, scenario, state_initial_transition, pos_y);
-
+/*
           // Add post transitions of the place
           int indexT = tList.indexOf();
           if (indexT != -1){
 
           }
-        }
+*/        }
     }
 
 }
