@@ -13,6 +13,11 @@
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
 #include <Scenario/Commands/Constraint/AddProcessToConstraint.hpp>
 
+#include <QFileDialog>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Scenario/Process/Algorithms/ContainersAccessors.hpp>
 #include <Scenario/Commands/TimeNode/SetTrigger.hpp>
@@ -44,8 +49,7 @@ struct random_selector
         }
 
         //convenience function that works on anything with a sensible begin() and end(), and returns with a ref to the value type
-        template <typename Container>
-        auto operator()(const Container& c) -> decltype(*begin(c))& {
+        template <typename Container> auto operator()(const Container& c) -> decltype(*begin(c))& {
             return *select(begin(c), end(c));
         }
 
@@ -53,63 +57,136 @@ struct random_selector
         RandomGenerator gen;
 };
 
-void generateHimitoScenario(
-        const Scenario::ScenarioModel& scenar,
+class Place{
+  public:
+    QString name;
+    QJsonArray pre;
+    QJsonArray pos;
+};
+
+class Transition{
+  public:
+    QString name;
+};
+
+auto& createTransition(
+    CommandDispatcher<>& disp,
+    const Scenario::ScenarioModel& scenario,
+    const Scenario::StateModel& startState)
+{
+
+  using namespace Scenario;
+  using namespace Scenario::Command;
+
+  auto state_command = new CreateConstraint_State_Event_TimeNode(
+              scenario,                   // scenario
+              startState.id(),           // start state id
+              TimeValue::fromMsecs(2000), // duration
+              0.5);                       // y-pos in %
+  disp.submitCommand(state_command);
+  auto& new_state = scenario.state(state_command->createdState());
+  // auto& new_constraint = scenario.constraint(state_command->createdConstraint());
+  auto& new_timenode = parentTimeNode(new_state, scenario);
+
+  auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(new_timenode);
+  disp.submitCommand(trigger_command);
+
+  return new_state;
+}
+
+void generateScenarioFromPetriNet(
+        const Scenario::ScenarioModel& scenario,
         CommandDispatcher<>& disp
         )
 {
     using namespace Scenario;
     using namespace Scenario::Command;
 
-    auto& first_state = *states(scenar).begin();
+    // search the file
+    QString filename = QFileDialog::getOpenFileName();
 
-    // 1. Create an empty box
-    auto state_command = new CreateConstraint_State_Event_TimeNode(
-                scenar, // The scenario
-                first_state.id(), // Start state
-                TimeValue::fromMsecs(2000), // Duration
-                0.5); // Height in %
+    // load JSON file
+    QFile jsonFile(filename);
+    if (!jsonFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+      qWarning("Couldn't open save file.");
+      return;
+    }
+    QByteArray jsonData = jsonFile.readAll();
+    jsonFile.close();
+    QJsonDocument loadJson(QJsonDocument::fromJson(jsonData));
+    QJsonObject json = loadJson.object();
 
-    disp.submitCommand(state_command);
-
-    // Get the State & constraint that were created
-    auto& new_state = scenar.state(state_command->createdState());
-    auto& new_constraint = scenar.constraint(state_command->createdConstraint());
-
-    // Get the time node of this state
-    auto& new_timenode = parentTimeNode(new_state, scenar);
-
-    // 3. Create a trigger on the end time node
-    auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(new_timenode);
-    disp.submitCommand(trigger_command);
-
-    // Try to parse an expression; if it is correctly parsed, add the time node
-    auto maybe_parsed_expression = State::parseExpression("(a:/b < 1234)");
-    if(maybe_parsed_expression)
-    {
-        // 4. Set the expression to the trigger
-        auto expr_command = new SetTrigger(new_timenode, *maybe_parsed_expression);
-        disp.submitCommand(expr_command);
+    // Load Transitions
+    QJsonArray transitionsArray = json["transitions"].toArray();
+    for (int tIndex = 0; tIndex < transitionsArray.size(); ++tIndex) {
+        QJsonObject tObject = transitionsArray[tIndex].toObject();
+        qWarning() << tObject;
     }
 
+    // Load Places
+    QJsonArray placesArray = json["places"].toArray();
+    for (int pIndex = 0; pIndex < placesArray.size(); ++pIndex) {
+        QJsonObject pObject = placesArray[pIndex].toObject();
+        Place p;
+        p.name = pObject["name"].toString();
+        p.pre = pObject["pre"].toArray();
+        p.pos = pObject["post"].toArray();
+        qWarning() << pObject;
+    }
+
+    // initial state of the scenario
+    auto& first_state = *states(scenario).begin();
+    auto& state_initial_transition = createTransition(disp, scenario, first_state);
+    auto& state_second_transition = createTransition(disp, scenario, state_initial_transition);
+
+    // Create the initial transition
+
+    // 1. Create a constraint
+    // auto state_command = new CreateConstraint_State_Event_TimeNode(
+    //             scenario,                   // scenario
+    //             first_state.id(),           // start state id
+    //             TimeValue::fromMsecs(2000), // duration
+    //             0.5);                       // y-pos in %
+    // disp.submitCommand(state_command);
+
+    // Get the State & constraint that were created
+    // auto& new_state = scenario.state(state_command->createdState());
+    // auto& new_constraint = scenario.constraint(state_command->createdConstraint());
+
+    // Get the time node of this state
+    // auto& new_timenode = parentTimeNode(new_state, scenario);
+
+    // 3. Create a trigger on the end time node
+    // auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(new_timenode);
+    // disp.submitCommand(trigger_command);
+
+    // Try to parse an expression; if it is correctly parsed, add the time node
+    // auto maybe_parsed_expression = State::parseExpression("(a:/b < 1234)");
+    // if(maybe_parsed_expression)
+    // {
+    //     // 4. Set the expression to the trigger
+    //     auto expr_command = new SetTrigger(new_timenode, *maybe_parsed_expression);
+    //     disp.submitCommand(expr_command);
+    // }
+
     //5. Create a loop
-    using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoRacks>>;
-    auto create_loop = new CreateProcess(
-                new_constraint, // Where to create
-                Metadata<ConcreteFactoryKey_k, Loop::ProcessModel>::get()); // What to create
-    disp.submitCommand(create_loop);
+    // using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoRacks>>;
+    // auto create_loop = new CreateProcess(
+    //             new_constraint, // Where to create
+    //             Metadata<ConcreteFactoryKey_k, Loop::ProcessModel>::get()); // What to create
+    // disp.submitCommand(create_loop);
 
     // Get the loop process
-    auto& loop = dynamic_cast<Loop::ProcessModel&>(new_constraint.processes.at(create_loop->processId()));
+    // auto& loop = dynamic_cast<Loop::ProcessModel&>(new_constraint.processes.at(create_loop->processId()));
 
     // Get the pattern constraint of the loop
-    auto& pattern = loop.constraint();
+    // auto& pattern = loop.constraint();
 
     // 6. Create a scenario in the pattern
-    auto create_scenario = new CreateProcess(
-                pattern,
-                Metadata<ConcreteFactoryKey_k, Scenario::ProcessModel>::get());
-    disp.submitCommand(create_scenario);
+    // auto create_scenario = new CreateProcess(
+    //             pattern,
+    //             Metadata<ConcreteFactoryKey_k, Scenario::ProcessModel>::get());
+    // disp.submitCommand(create_scenario);
 
 }
 

@@ -43,7 +43,7 @@
 stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app):
     iscore::GUIApplicationContextPlugin(app, "TemporalAutomatasApplicationPlugin", nullptr)
 {
-    m_himito = new QAction{tr("Generate Himito score"), nullptr};
+    m_himito = new QAction{tr("Generate scenario from Petri Net"), nullptr};
     connect(m_himito, &QAction::triggered, [&] () {
 
         auto doc = currentDocument();
@@ -61,7 +61,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app
 
         CommandDispatcher<> disp(doc->context().commandStack);
 
-        stal::generateHimitoScenario(*firstScenario, disp);
+        stal::generateScenarioFromPetriNet(*firstScenario, disp);
     });
     m_generate = new QAction{tr("Generate random score"), nullptr};
     connect(m_generate, &QAction::triggered, [&] () {

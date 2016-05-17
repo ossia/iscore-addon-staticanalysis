@@ -12,8 +12,8 @@ namespace stal
             int N,
             CommandDispatcher<>&);
 
-    void generateHimitoScenario(
-            const Scenario::ScenarioModel& scenar,
+    void generateScenarioFromPetriNet(
+            const Scenario::ScenarioModel& scenario,
             CommandDispatcher<>& disp
             );
 }
