@@ -72,7 +72,9 @@ class Transition{
 auto& createTransition(
     CommandDispatcher<>& disp,
     const Scenario::ScenarioModel& scenario,
-    const Scenario::StateModel& startState)
+    const Scenario::StateModel& startState,
+    double posY
+    )
 {
 
   using namespace Scenario;
@@ -82,8 +84,9 @@ auto& createTransition(
               scenario,                   // scenario
               startState.id(),           // start state id
               Scenario::parentEvent(startState, scenario).date() + TimeValue::fromMsecs(2000), // duration
-              0.1);                       // y-pos in %
+              posY);                       // y-pos in %
   disp.submitCommand(state_command);
+
   auto& new_state = scenario.state(state_command->createdState());
   // auto& new_constraint = scenario.constraint(state_command->createdConstraint());
   auto& new_timenode = parentTimeNode(new_state, scenario);
@@ -123,21 +126,24 @@ void generateScenarioFromPetriNet(
         qWarning() << tObject;
     }
 
-    // Load Places
-    QJsonArray placesArray = json["places"].toArray();
-    for (int pIndex = 0; pIndex < placesArray.size(); ++pIndex) {
-        QJsonObject pObject = placesArray[pIndex].toObject();
-        Place p;
-        p.name = pObject["name"].toString();
-        p.pre = pObject["pre"].toArray();
-        p.pos = pObject["post"].toArray();
-        qWarning() << pObject;
-    }
-
     // initial state of the scenario
     auto& first_state = *states(scenario).begin();
-    auto& state_initial_transition = createTransition(disp, scenario, first_state);
-    auto& state_second_transition = createTransition(disp, scenario, state_initial_transition);
+    auto& state_initial_transition = createTransition(disp, scenario, first_state, 0.1);
+
+    // create loops for each place
+    // Load Places
+    QJsonArray placesArray = json["places"].toArray();
+    QList<Place> places;
+    for (int pIndex = 0; pIndex < placesArray.size(); ++pIndex) {
+        QJsonObject pObject = placesArray[pIndex].toObject();
+        // Place p;
+        // p.name = pObject["name"].toString();
+        // p.pre = pObject["pre"].toArray();
+        // p.pos = pObject["post"].toArray();
+        // places.append(p);
+        qWarning() << pObject;
+        auto& state_transition = createTransition(disp, scenario, state_initial_transition, pIndex * 0.1);
+    }
 
     // Create the initial transition
 
