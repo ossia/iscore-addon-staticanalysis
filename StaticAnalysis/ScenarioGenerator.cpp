@@ -60,8 +60,17 @@ struct random_selector
 class Transition{
   public:
     QString name;
+
 };
 
+inline bool operator==(const Transition& t, const QString& other)
+{
+    return t.name == other;
+}
+inline bool operator!=(const Transition& t, const QString& other)
+{
+    return t.name != other;
+}
 auto createConstraint(
     CommandDispatcher<>& disp,
     const Scenario::ScenarioModel& scenario,
@@ -178,13 +187,24 @@ void generateScenarioFromPetriNet(
         tList.append(t);
     }
 
-    QString truc;
-    auto elt_it = find_if(tList, [&] (auto elt) {
-        return elt.name == truc;
-    });
-    if(elt_it != tList.end())
-    {
-        qDebug() << elt_it->name;
+    { // Case 1 with a lambda-function
+        QString truc;
+
+        auto elt_it = find_if(tList, [&] (auto elt) {
+            return elt.name == truc;
+        });
+        if(elt_it != tList.end())
+        {
+            qDebug() << elt_it->name;
+        }
+    }
+
+    { // Case 2 with comparator
+        auto elt_it = find(tList, "blah");
+        if(elt_it != tList.end())
+        {
+            qDebug() << elt_it->name;
+        }
     }
 
     // initial state of the scenario
