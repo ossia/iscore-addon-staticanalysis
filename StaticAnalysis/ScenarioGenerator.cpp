@@ -81,8 +81,8 @@ auto& createTransition(
   auto state_command = new CreateConstraint_State_Event_TimeNode(
               scenario,                   // scenario
               startState.id(),           // start state id
-              TimeValue::fromMsecs(2000), // duration
-              0.5);                       // y-pos in %
+              Scenario::parentEvent(startState, scenario).date() + TimeValue::fromMsecs(2000), // duration
+              0.1);                       // y-pos in %
   disp.submitCommand(state_command);
   auto& new_state = scenario.state(state_command->createdState());
   // auto& new_constraint = scenario.constraint(state_command->createdConstraint());
