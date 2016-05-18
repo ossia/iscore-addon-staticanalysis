@@ -84,7 +84,7 @@ class Transition{
   }
 };
 
-auto createTree(
+auto& createTree(
         CommandDispatcher<>& disp,
         const iscore::DocumentContext& ctx)
 {
@@ -95,7 +95,6 @@ auto createTree(
             .get(Ossia::OSCProtocolFactory::static_concreteFactoryKey());
 
     auto& tree = ctx.plugin<Explorer::DeviceDocumentPlugin>();
-    auto& root = tree.rootNode();
 
     // First create a device
     auto settings = settings_factory->defaultSettings();
@@ -103,14 +102,27 @@ auto createTree(
     auto create_dev_cmd = new Explorer::Command::AddDevice(tree, settings);
     disp.submitCommand(create_dev_cmd);
 
+    return tree;
+}
+
+template<typename Val>
+auto createTreeNode(
+        CommandDispatcher<>& disp,
+        Explorer::DeviceDocumentPlugin& tree,
+        QString name,
+        Val&& value
+        )
+{
     // Find the created device
-    auto& created_device_root = Device::getNodeFromAddress(root, State::Address{settings.name, {}});
+    auto& root = tree.rootNode();
+    auto& created_device_root = Device::getNodeFromAddress(root, State::Address{"local", {}});
 
     // Create some node
     Device::AddressSettings theNode;
-    theNode.name = "myVar";
+    theNode.name = name;
+    theNode.clipMode = Device::ClipMode::Free;
     theNode.ioType = Device::IOType::InOut;
-    theNode.value = State::Value::fromValue(false);
+    theNode.value = State::Value::fromValue(value);
 
     auto create_addr_cmd = new Explorer::Command::AddAddress(
                 tree,
@@ -263,7 +275,6 @@ void generateScenarioFromPetriNet(
     using namespace Scenario;
     using namespace Scenario::Command;
 
-    createTree(disp, iscore::IDocument::documentContext(scenario));
     // search the file
     QString filename = QFileDialog::getOpenFileName(NULL, "Open Petri Net File", QDir::currentPath(), "JSON files (*.json)");
 
@@ -278,6 +289,9 @@ void generateScenarioFromPetriNet(
     QJsonDocument loadJson(QJsonDocument::fromJson(jsonData));
     QJsonObject json = loadJson.object();
 
+    // Create Device Tree
+    auto& device_tree = createTree(disp, iscore::IDocument::documentContext(scenario));
+
     // Load Transitions
     QJsonArray transitionsArray = json["transitions"].toArray();
     QList<Transition> tList;
@@ -286,6 +300,7 @@ void generateScenarioFromPetriNet(
         // qWarning() << tObject;
         Transition t;
         t.name = tObject["name"].toString();
+        createTreeNode(disp, device_tree, t.name, false);
         tList.append(t);
     }
 
@@ -319,7 +334,7 @@ void generateScenarioFromPetriNet(
           auto& place_start_state = scenario_place.states.at(start_state_id);
 
           // TODO change me
-          addMessageToState(disp, place_start_state);
+          //addMessageToState(disp, place_start_state);
 
 
           auto& state_transition = createTransition(disp, scenario_place, place_start_state,  TimeValue::zero(), TimeValue::infinite(), 0.4);
