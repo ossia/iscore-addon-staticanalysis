@@ -103,7 +103,7 @@ auto createConstraint(
 template<typename Scenario_T>
 void createTrigger(
         CommandDispatcher<>& disp,
-        const Scenario::ScenarioModel& scenario,
+        const Scenario_T& scenario,
         const Scenario::StateModel& state,
         const TimeValue& min_duration,
         const TimeValue& max_duration
