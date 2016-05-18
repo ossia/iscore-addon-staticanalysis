@@ -117,13 +117,13 @@ void createTrigger(
   auto trigger_command = new AddTrigger<Scenario_T>(timenode);
   disp.submitCommand(trigger_command);
 
-  // Change Maximum Duration
-  auto set_max_cmd = new SetMaxDuration(scenario.constraint(state.previousConstraint()), min_duration, true);
-  disp.submitCommand(set_max_cmd);
-
    // Change Minimum Duration
-   auto set_min_cmd = new SetMinDuration(scenario.constraint(state.previousConstraint()), max_duration, true);
+   auto set_min_cmd = new SetMinDuration(scenario.constraint(state.previousConstraint()), min_duration, min_duration.isZero());
    disp.submitCommand(set_min_cmd);
+
+   // Change Maximum Duration
+   auto set_max_cmd = new SetMaxDuration(scenario.constraint(state.previousConstraint()), max_duration, max_duration.isInfinite());
+   disp.submitCommand(set_max_cmd);
 }
 
 auto& createPlace(
