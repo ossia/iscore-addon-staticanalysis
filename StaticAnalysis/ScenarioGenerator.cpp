@@ -100,10 +100,10 @@ auto createConstraint(
   return state_command;
 }
 
-
+template<typename Scenario_T>
 void createTrigger(
     CommandDispatcher<>& disp,
-    const Scenario::ScenarioModel& scenario,
+    const Scenario_T& scenario,
     const Scenario::StateModel& state)
 {
   using namespace Scenario;
@@ -111,12 +111,12 @@ void createTrigger(
 
   // Create the trigger point
   auto& timenode = parentTimeNode(state, scenario);
-  auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(timenode);
+  auto trigger_command = new AddTrigger<Scenario_T>(timenode);
   disp.submitCommand(trigger_command);
 
   // TODO: Change Maximum Duration
-//   auto set_max_cmd = new SetMaxDuration(scenario.constraint(state.previousConstraint()), TimeValue::infinite(), true);
-//   disp.submitCommand(set_max_cmd);
+   auto set_max_cmd = new SetMaxDuration(scenario.constraint(state.previousConstraint()), TimeValue::infinite(), true);
+   disp.submitCommand(set_max_cmd);
 }
 
 auto& createPlace(
@@ -148,7 +148,7 @@ auto& createPlace(
 
   // TODO: Change this
   auto& pattern_state = loop.state(pattern.endState());
-  createTrigger(disp, scenario, pattern_state);
+  createTrigger(disp, loop, pattern_state);
 
   auto create_scenario_cmd = new CreateProcess(
               pattern,
