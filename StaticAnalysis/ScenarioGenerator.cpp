@@ -100,7 +100,7 @@ auto createConstraint(
   return state_command;
 }
 
-
+template<typename Scenario_T>
 void createTrigger(
         CommandDispatcher<>& disp,
         const Scenario::ScenarioModel& scenario,
@@ -114,7 +114,7 @@ void createTrigger(
 
   // Create the trigger point
   auto& timenode = parentTimeNode(state, scenario);
-  auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(timenode);
+  auto trigger_command = new AddTrigger<Scenario_T>(timenode);
   disp.submitCommand(trigger_command);
 
   // Change Maximum Duration
@@ -153,9 +153,8 @@ auto& createPlace(
   auto& loop = dynamic_cast<Loop::ProcessModel&>(new_constraint.processes.at(create_loop_cmd->processId()));
   auto& pattern = loop.constraint();
 
-  // TODO: Change this
-//  auto& pattern_state = loop.state(pattern.endState());
-//  createTrigger(disp, scenario, pattern_state);
+  auto& pattern_state = loop.state(pattern.endState());
+  createTrigger(disp, loop, pattern_state, TimeValue::zero(), TimeValue::infinite());
 
   auto create_scenario_cmd = new CreateProcess(
               pattern,
