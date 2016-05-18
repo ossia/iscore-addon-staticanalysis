@@ -70,19 +70,22 @@ struct random_selector
         RandomGenerator gen;
 };
 
-class Transition{
+class Place{
   public:
     QString name;
+    QList<QString> pre;
+    QList<QString> pos;
 
-  friend bool operator==(const Transition& t, const QString& other)
+  friend bool operator==(const Place& p, const QString& other)
   {
-      return t.name == other;
+      return p.name == other;
   }
 
-  friend bool operator!=(const Transition& t, const QString& other)
+  friend bool operator!=(const Place& p, const QString& other)
   {
-      return t.name != other;
+      return p.name != other;
   }
+
 };
 
 auto& createTree(
@@ -247,7 +250,34 @@ auto createPlace(
 
   auto& scenario_pattern = static_cast<Scenario::ScenarioModel&>(pattern.processes.at(create_scenario_cmd->processId()));
 
-  return std::tie(pattern_state, scenario_pattern);
+  return std::tie(pattern_state, scenario_pattern, loop_state, loop);
+}
+
+void addConditionTrigger(
+        CommandDispatcher<>& disp,
+        const Scenario::ScenarioModel& scenario,
+        const Scenario::StateModel& state,
+        QList<QString> tList
+        )
+{
+    using namespace Scenario;
+    using namespace Scenario::Command;
+
+    QList<QString> condition;
+    foreach (QString atom, tList){
+        condition << "local:/" + atom + "==1";
+    }
+    QString expression = condition.join(" or ");
+
+    // Try to parse an expression; if it is correctly parsed, add the time node
+    auto maybe_parsed_expression = State::parseExpression(expression);
+    if(maybe_parsed_expression)
+    {
+        // 4. Set the expression to the trigger
+        auto& timenode = parentTimeNode(state, scenario);
+        auto expr_command = new SetTrigger(timenode, *maybe_parsed_expression);
+        disp.submitCommand(expr_command);
+    }
 }
 
 auto& createTransition(
@@ -272,6 +302,16 @@ auto& createTransition(
   return new_state;
 }
 
+
+QList<QString> JsonArrayToStringList(
+        QJsonArray list)
+{
+    QList<QString> output;
+    foreach(QJsonValue s, list){
+        output << s.toString();
+    }
+    return output;
+}
 
 void generateScenarioFromPetriNet(
         const Scenario::ScenarioModel& scenario,
@@ -300,13 +340,9 @@ void generateScenarioFromPetriNet(
 
     // Load Transitions
     QJsonArray transitionsArray = json["transitions"].toArray();
-//    QList<Transition> tList;
     for (int tIndex = 0; tIndex < transitionsArray.size(); ++tIndex) {
         QJsonObject tObject = transitionsArray[tIndex].toObject();
-//        Transition t;
-//        t = tObject["name"].toString();
         createTreeNode(disp, device_tree, tObject["name"].toString(), false);  // adding transition variable to device tree
-//        tList.append(t);
     }
 
     // default durations of transitions
@@ -318,47 +354,60 @@ void generateScenarioFromPetriNet(
     auto& first_state = *states(scenario).begin();
     auto& state_initial_transition = createTransition(disp, scenario, first_state, t_min, t_max, 0.02);
 
-    // create loops for each place
-    // Load Places
+    // Parsing Places from JSON file
     QJsonArray placesArray = json["places"].toArray();
-    double pos_y = 0.05;
+    QList<Place> pList;
+    QList<QString> finalTransitions, initialTransitions;
     for (int pIndex = 0; pIndex < placesArray.size(); ++pIndex) {
         QJsonObject pObject = placesArray[pIndex].toObject();
-        // qWarning() << pObject;
-        QJsonArray pos_transitions = pObject["post"].toArray();
-        QJsonArray pre_transitions = pObject["pre"].toArray();
+        Place p;
+        p.name = pObject["name"].toString();
+        p.pos = JsonArrayToStringList(pObject["post"].toArray());
+        p.pre = JsonArrayToStringList(pObject["pre"].toArray());
+        pList.append(p);
 
-        if (!(pos_transitions.empty() || pre_transitions.empty())){
+        if (p.pos.empty()){  // it's final place
+            finalTransitions = p.pre;
+        } else if (p.pre.empty()){  // it's initial place
+            initialTransitions = p.pos;
+        }
+    }
+
+    // create loops for each place
+    double pos_y = 0.05;
+    foreach (Place p, pList) {
+        if (!(p.pre.empty() || p.pos.empty())){
 
           auto place = createPlace(disp, scenario, state_initial_transition, pos_y);
           auto& scenario_place = std::get<1>(place);
           auto& pattern_state_place = std::get<0>(place);
+          auto& loop_state = std::get<2>(place);
+          auto& loop = std::get<3>(place);
           auto& start_state_id = *scenario_place.startEvent().states().begin();
           auto& place_start_state = scenario_place.states.at(start_state_id);
 
           auto& state_place = createTransition(disp, scenario_place, place_start_state,  TimeValue::zero(), TimeValue::infinite(), 0.4);
 
           // Add pre transitions of the place
-          for (int tIndex = 0; tIndex < pre_transitions.size(); ++tIndex) {
-              QString tName = pre_transitions[tIndex].toString();
-              addMessageToState(disp, state_place, "local", tName, false);
+          foreach (QString t, p.pre){
+              addMessageToState(disp, state_place, "local", t, false);
           }
 
           // Add post transitions of the place
-          for (int tIndex = 0; tIndex < pos_transitions.size(); ++tIndex) {
-            QString tName = pos_transitions[tIndex].toString();
-//            auto elt_it = find(tList, tName);
-//            if (elt_it != tList.end()) {}
+          double pos_t = 0.8;
+          foreach (QString t, p.pos){
+              auto& state_transition = createTransition(disp, scenario_place, state_place, t_min, t_max, pos_t);
 
-            // Create the synchronized event
-            double pos_t = tIndex * 0.4 + 0.8;
+              addMessageToState(disp, state_transition, "local", t, true);
+              addMessageToState(disp, pattern_state_place, "local", t, false);
 
-            auto& state_transition = createTransition(disp, scenario_place, state_place, t_min, t_max, pos_t);
-
-            addMessageToState(disp, state_transition, "local", tName, true);
-            addMessageToState(disp, pattern_state_place, "local", tName, false);
-
+              pos_t += 0.4;
           }
+
+          // Add stop condition of the place loop
+          addConditionTrigger(disp, scenario, loop_state, finalTransitions);
+
+//          addConditionTrigger(disp, loop, pattern_state_place, finalTransitions);
 
           // Increment pos Y
           pos_y += 0.1;
