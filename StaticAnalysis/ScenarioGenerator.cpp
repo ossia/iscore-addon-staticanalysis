@@ -12,6 +12,8 @@
 
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
 #include <Scenario/Commands/Constraint/AddProcessToConstraint.hpp>
+#include <Scenario/Commands/Constraint/SetMaxDuration.hpp>
+
 
 #include <QFileDialog>
 #include <QFile>
@@ -111,6 +113,10 @@ void createTrigger(
   auto& timenode = parentTimeNode(state, scenario);
   auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(timenode);
   disp.submitCommand(trigger_command);
+
+  // TODO: Change Maximum Duration
+//   auto set_max_cmd = new SetMaxDuration(scenario.constraint(state.previousConstraint()), TimeValue::infinite(), true);
+//   disp.submitCommand(set_max_cmd);
 }
 
 auto& createPlace(
@@ -141,7 +147,7 @@ auto& createPlace(
   auto& pattern = loop.constraint();
 
   // TODO: Change this
-  auto& pattern_state = scenario.state(pattern.endState());
+  auto& pattern_state = loop.state(pattern.endState());
   createTrigger(disp, scenario, pattern_state);
 
   auto create_scenario_cmd = new CreateProcess(
@@ -202,7 +208,7 @@ void generateScenarioFromPetriNet(
     QList<Transition> tList;
     for (int tIndex = 0; tIndex < transitionsArray.size(); ++tIndex) {
         QJsonObject tObject = transitionsArray[tIndex].toObject();
-        qWarning() << tObject;
+        // qWarning() << tObject;
         Transition t;
         t.name = tObject["name"].toString();
         tList.append(t);
@@ -217,7 +223,7 @@ void generateScenarioFromPetriNet(
     QJsonArray placesArray = json["places"].toArray();
     for (int pIndex = 0; pIndex < placesArray.size(); ++pIndex) {
         QJsonObject pObject = placesArray[pIndex].toObject();
-        qWarning() << pObject;
+        // qWarning() << pObject;
         QJsonArray pos_transitions = pObject["post"].toArray();
         QJsonArray pre_transitions = pObject["pre"].toArray();
 
@@ -239,8 +245,6 @@ void generateScenarioFromPetriNet(
             QString tName = pos_transitions[tIndex].toString();
             auto elt_it = find(tList, tName);
             if (elt_it != tList.end()) {
-                qDebug() << elt_it->name;
-
                 // Create the synchronized event
                 double pos_t = tIndex * 0.4 + 0.8;
 
