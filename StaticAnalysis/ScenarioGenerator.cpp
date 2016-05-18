@@ -13,7 +13,7 @@
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
 #include <Scenario/Commands/Constraint/AddProcessToConstraint.hpp>
 #include <Scenario/Commands/Constraint/SetMaxDuration.hpp>
-
+#include <Scenario/Commands/Constraint/SetMinDuration.hpp>
 
 #include <QFileDialog>
 #include <QFile>
@@ -102,9 +102,12 @@ auto createConstraint(
 
 
 void createTrigger(
-    CommandDispatcher<>& disp,
-    const Scenario::ScenarioModel& scenario,
-    const Scenario::StateModel& state)
+        CommandDispatcher<>& disp,
+        const Scenario::ScenarioModel& scenario,
+        const Scenario::StateModel& state,
+        const TimeValue& min_duration,
+        const TimeValue& max_duration
+        )
 {
   using namespace Scenario;
   using namespace Scenario::Command;
@@ -114,9 +117,13 @@ void createTrigger(
   auto trigger_command = new AddTrigger<Scenario::ScenarioModel>(timenode);
   disp.submitCommand(trigger_command);
 
-  // TODO: Change Maximum Duration
-//   auto set_max_cmd = new SetMaxDuration(scenario.constraint(state.previousConstraint()), TimeValue::infinite(), true);
-//   disp.submitCommand(set_max_cmd);
+  // Change Maximum Duration
+  auto set_max_cmd = new SetMaxDuration(scenario.constraint(state.previousConstraint()), min_duration, true);
+  disp.submitCommand(set_max_cmd);
+
+   // Change Minimum Duration
+   auto set_min_cmd = new SetMinDuration(scenario.constraint(state.previousConstraint()), max_duration, true);
+   disp.submitCommand(set_min_cmd);
 }
 
 auto& createPlace(
@@ -132,7 +139,7 @@ auto& createPlace(
   // Create constraint
   auto state_place_cmd = createConstraint(disp, scenario, startState, posY);
   auto& loop_state = scenario.state(state_place_cmd->createdState());
-  createTrigger(disp, scenario, loop_state);
+  createTrigger(disp, scenario, loop_state, TimeValue::zero(), TimeValue::infinite());
 
   // Create the loop
   using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoRacks>>;
@@ -147,8 +154,8 @@ auto& createPlace(
   auto& pattern = loop.constraint();
 
   // TODO: Change this
-  auto& pattern_state = loop.state(pattern.endState());
-  createTrigger(disp, scenario, pattern_state);
+//  auto& pattern_state = loop.state(pattern.endState());
+//  createTrigger(disp, scenario, pattern_state);
 
   auto create_scenario_cmd = new CreateProcess(
               pattern,
@@ -175,7 +182,7 @@ auto& createTransition(
   auto& new_state = scenario.state(state_command->createdState());
 
   // Create the trigger point
-  createTrigger(disp, scenario, new_state);
+  createTrigger(disp, scenario, new_state, TimeValue::zero(), TimeValue::infinite());
 
   return new_state;
 }
