@@ -253,9 +253,10 @@ auto createPlace(
   return std::tie(pattern_state, scenario_pattern, loop_state, loop);
 }
 
+template<typename Scenario_T>
 void addConditionTrigger(
         CommandDispatcher<>& disp,
-        const Scenario::ScenarioModel& scenario,
+        const Scenario_T& scenario,
         const Scenario::StateModel& state,
         QList<QString> tList
         )
@@ -313,6 +314,27 @@ QList<QString> JsonArrayToStringList(
     return output;
 }
 
+QJsonObject loadJsonFile(){
+    // search the file
+    QString filename = QFileDialog::getOpenFileName(NULL,
+                                                    "Open Petri Net File",
+                                                    QDir::currentPath(),
+                                                    "JSON files (*.json)");
+
+    // load JSON file
+    QFile jsonFile(filename);
+    if (!jsonFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+        qWarning("Couldn't open save file.");
+        return QJsonObject();
+    }
+
+    QByteArray jsonData = jsonFile.readAll();
+    jsonFile.close();
+
+    QJsonDocument loadJson(QJsonDocument::fromJson(jsonData));
+    return loadJson.object();
+}
+
 void generateScenarioFromPetriNet(
         const Scenario::ScenarioModel& scenario,
         CommandDispatcher<>& disp
@@ -321,19 +343,9 @@ void generateScenarioFromPetriNet(
     using namespace Scenario;
     using namespace Scenario::Command;
 
-    // search the file
-    QString filename = QFileDialog::getOpenFileName(NULL, "Open Petri Net File", QDir::currentPath(), "JSON files (*.json)");
-
-    // load JSON file
-    QFile jsonFile(filename);
-    if (!jsonFile.open(QIODevice::ReadOnly | QIODevice::Text)){
-      qWarning("Couldn't open save file.");
-      return;
-    }
-    QByteArray jsonData = jsonFile.readAll();
-    jsonFile.close();
-    QJsonDocument loadJson(QJsonDocument::fromJson(jsonData));
-    QJsonObject json = loadJson.object();
+    // Load JSON file
+    QJsonObject json = loadJsonFile();
+    if (json.isEmpty()){ return; }
 
     // Create Device Tree
     auto& device_tree = createTree(disp, iscore::IDocument::documentContext(scenario));
@@ -348,7 +360,6 @@ void generateScenarioFromPetriNet(
     // default durations of transitions
     TimeValue t_min = TimeValue::fromMsecs(3000);
     TimeValue t_max = TimeValue::fromMsecs(5000);
-
 
     // initial state of the scenario
     auto& first_state = *states(scenario).begin();
@@ -407,7 +418,11 @@ void generateScenarioFromPetriNet(
           // Add stop condition of the place loop
           addConditionTrigger(disp, scenario, loop_state, finalTransitions);
 
-//          addConditionTrigger(disp, loop, pattern_state_place, finalTransitions);
+          // Add stop condition of the loop pattern (post conditions)
+          addConditionTrigger(disp, loop, pattern_state_place, p.pos);
+
+          // Add conditon for start the loop (pre conditions)
+          addConditionTrigger(disp, scenario_place, state_place, p.pre);
 
           // Increment pos Y
           pos_y += 0.1;
