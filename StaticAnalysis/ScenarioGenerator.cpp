@@ -33,6 +33,7 @@
 #include <Scenario/Commands/State/AddMessagesToState.hpp>
 
 #include <iscore/document/DocumentContext.hpp>
+#include <tuple>
 #include  <random>
 #include  <iterator>
 // http://stackoverflow.com/a/16421677/1495627
@@ -133,18 +134,23 @@ auto createTreeNode(
     disp.submitCommand(create_addr_cmd);
 }
 
+template<typename Val>
 auto addMessageToState(
         CommandDispatcher<>& disp,
-        Scenario::StateModel& state)
+        Scenario::StateModel& state,
+        QString device,
+        QString address,
+        Val&& value
+        )
 {
     auto cmd = new Scenario::Command::AddMessagesToState(
                 state.messages(),
                 { // A list
                     { // Of messages
                       { // The address
-                          "local", {"myVar"}
+                          device, {address}
                       },
-                      State::Value::fromValue(false) // the value
+                      State::Value::fromValue(value) // the value
                   }
                 });
 
@@ -204,7 +210,7 @@ void createTrigger(
    disp.submitCommand(set_max_cmd);
 }
 
-auto& createPlace(
+auto createPlace(
     CommandDispatcher<>& disp,
     const Scenario::ScenarioModel& scenario,
     const Scenario::StateModel& startState,
@@ -241,7 +247,7 @@ auto& createPlace(
 
   auto& scenario_pattern = static_cast<Scenario::ScenarioModel&>(pattern.processes.at(create_scenario_cmd->processId()));
 
-  return scenario_pattern;
+  return std::tie(pattern_state, scenario_pattern);
 }
 
 auto& createTransition(
@@ -300,7 +306,7 @@ void generateScenarioFromPetriNet(
         // qWarning() << tObject;
         Transition t;
         t.name = tObject["name"].toString();
-        createTreeNode(disp, device_tree, t.name, false);
+        createTreeNode(disp, device_tree, t.name, false);  // adding transition variable to device tree
         tList.append(t);
     }
 
@@ -329,15 +335,13 @@ void generateScenarioFromPetriNet(
         } else {                                    // Segmentation Place
           double pos_y = pIndex * 0.1 + 0.1;
 
-          auto& scenario_place = createPlace(disp, scenario, state_initial_transition, pos_y);
+          auto place = createPlace(disp, scenario, state_initial_transition, pos_y);
+          auto& scenario_place = std::get<1>(place);
+          auto& pattern_state_place = std::get<0>(place);
           auto& start_state_id = *scenario_place.startEvent().states().begin();
           auto& place_start_state = scenario_place.states.at(start_state_id);
 
-          // TODO change me
-          //addMessageToState(disp, place_start_state);
-
-
-          auto& state_transition = createTransition(disp, scenario_place, place_start_state,  TimeValue::zero(), TimeValue::infinite(), 0.4);
+          auto& state_place = createTransition(disp, scenario_place, place_start_state,  TimeValue::zero(), TimeValue::infinite(), 0.4);
 
           // Add post transitions of the place
           for (int tIndex = 0; tIndex < pos_transitions.size(); ++tIndex) {
@@ -347,7 +351,11 @@ void generateScenarioFromPetriNet(
                 // Create the synchronized event
                 double pos_t = tIndex * 0.4 + 0.8;
 
-                createTransition(disp, scenario_place, state_transition, t_min, t_max, pos_t);
+                auto& state_transition = createTransition(disp, scenario_place, state_place, t_min, t_max, pos_t);
+
+                addMessageToState(disp, state_transition, "local", tName, true);
+                addMessageToState(disp, pattern_state_place, "local", tName, false);
+
 
             }
           }
