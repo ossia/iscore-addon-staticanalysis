@@ -23,6 +23,9 @@ set(SRCS
 
 qt5_add_resources(QRCS "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/Resources/TAResources.qrc")
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS} ${QRCS})
-target_link_libraries(${PROJECT_NAME} PUBLIC iscore_lib_base iscore_lib_process iscore_plugin_scenario iscore_plugin_automation iscore_plugin_loop)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+    iscore_lib_base iscore_lib_process
+    iscore_plugin_scenario iscore_plugin_automation
+    iscore_plugin_loop iscore_plugin_ossia)
 
 setup_iscore_plugin(${PROJECT_NAME})

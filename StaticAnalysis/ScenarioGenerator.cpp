@@ -23,6 +23,16 @@
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Scenario/Process/Algorithms/ContainersAccessors.hpp>
 #include <Scenario/Commands/TimeNode/SetTrigger.hpp>
+#include <Explorer/Commands/Add/AddDevice.hpp>
+#include <Explorer/Commands/Add/AddAddress.hpp>
+#include <OSSIA/Protocols/OSC/OSCSpecificSettings.hpp>
+#include <OSSIA/Protocols/OSC/OSCProtocolFactory.hpp>
+#include <OSSIA/Protocols/OSC/OSCDevice.hpp>
+#include <Device/Protocol/ProtocolList.hpp>
+#include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
+#include <Scenario/Commands/State/AddMessagesToState.hpp>
+
+#include <iscore/document/DocumentContext.hpp>
 #include  <random>
 #include  <iterator>
 // http://stackoverflow.com/a/16421677/1495627
@@ -73,6 +83,61 @@ class Transition{
       return t.name != other;
   }
 };
+
+auto createTree(
+        CommandDispatcher<>& disp,
+        const iscore::DocumentContext& ctx)
+{
+    // Create a tree
+    // Get necessary objects : OSC device factory, root node, etc.
+    auto settings_factory = ctx.app.components
+            .factory<Device::DynamicProtocolList>()
+            .get(Ossia::OSCProtocolFactory::static_concreteFactoryKey());
+
+    auto& tree = ctx.plugin<Explorer::DeviceDocumentPlugin>();
+    auto& root = tree.rootNode();
+
+    // First create a device
+    auto settings = settings_factory->defaultSettings();
+    settings.name = "local";
+    auto create_dev_cmd = new Explorer::Command::AddDevice(tree, settings);
+    disp.submitCommand(create_dev_cmd);
+
+    // Find the created device
+    auto& created_device_root = Device::getNodeFromAddress(root, State::Address{settings.name, {}});
+
+    // Create some node
+    Device::AddressSettings theNode;
+    theNode.name = "myVar";
+    theNode.ioType = Device::IOType::InOut;
+    theNode.value = State::Value::fromValue(false);
+
+    auto create_addr_cmd = new Explorer::Command::AddAddress(
+                tree,
+                created_device_root,
+                InsertMode::AsChild,
+                theNode);
+
+    disp.submitCommand(create_addr_cmd);
+}
+
+auto addMessageToState(
+        CommandDispatcher<>& disp,
+        Scenario::StateModel& state)
+{
+    auto cmd = new Scenario::Command::AddMessagesToState(
+                state.messages(),
+                { // A list
+                    { // Of messages
+                      { // The address
+                          "local", {"myVar"}
+                      },
+                      State::Value::fromValue(false) // the value
+                  }
+                });
+
+    disp.submitCommand(cmd);
+}
 
 auto createConstraint(
     CommandDispatcher<>& disp,
@@ -198,6 +263,7 @@ void generateScenarioFromPetriNet(
     using namespace Scenario;
     using namespace Scenario::Command;
 
+    createTree(disp, iscore::IDocument::documentContext(scenario));
     // search the file
     QString filename = QFileDialog::getOpenFileName(NULL, "Open Petri Net File", QDir::currentPath(), "JSON files (*.json)");
 
@@ -250,7 +316,10 @@ void generateScenarioFromPetriNet(
 
           auto& scenario_place = createPlace(disp, scenario, state_initial_transition, pos_y);
           auto& start_state_id = *scenario_place.startEvent().states().begin();
-          auto& place_start_state = scenario_place.states.at(start_state_id);;
+          auto& place_start_state = scenario_place.states.at(start_state_id);
+
+          // TODO change me
+          addMessageToState(disp, place_start_state);
 
 
           auto& state_transition = createTransition(disp, scenario_place, place_start_state,  TimeValue::zero(), TimeValue::infinite(), 0.4);
