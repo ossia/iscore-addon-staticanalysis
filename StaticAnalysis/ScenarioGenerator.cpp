@@ -167,10 +167,12 @@ auto& createPlace(
 }
 
 auto& createTransition(
-    CommandDispatcher<>& disp,
-    const Scenario::ScenarioModel& scenario,
-    const Scenario::StateModel& startState,
-    double posY
+        CommandDispatcher<>& disp,
+        const Scenario::ScenarioModel& scenario,
+        const Scenario::StateModel& startState,
+        const TimeValue& min_duration,
+        const TimeValue& max_duration,
+        double posY
     )
 {
   using namespace Scenario;
@@ -181,7 +183,7 @@ auto& createTransition(
   auto& new_state = scenario.state(state_command->createdState());
 
   // Create the trigger point
-  createTrigger(disp, scenario, new_state, TimeValue::zero(), TimeValue::infinite());
+  createTrigger(disp, scenario, new_state, min_duration, max_duration);
 
   return new_state;
 }
@@ -220,9 +222,14 @@ void generateScenarioFromPetriNet(
         tList.append(t);
     }
 
+    // default durations of transitions
+    TimeValue t_min = TimeValue::fromMsecs(2000);
+    TimeValue t_max = TimeValue::fromMsecs(6000);
+
+
     // initial state of the scenario
     auto& first_state = *states(scenario).begin();
-    auto& state_initial_transition = createTransition(disp, scenario, first_state, 0.02);
+    auto& state_initial_transition = createTransition(disp, scenario, first_state, t_min, t_max, 0.02);
 
     // create loops for each place
     // Load Places
@@ -244,7 +251,8 @@ void generateScenarioFromPetriNet(
           auto& start_state_id = *scenario_place.startEvent().states().begin();
           auto& place_start_state = scenario_place.states.at(start_state_id);;
 
-          auto& state_transition = createTransition(disp, scenario_place, place_start_state, 0.4);
+
+          auto& state_transition = createTransition(disp, scenario_place, place_start_state,  TimeValue::zero(), TimeValue::infinite(), 0.4);
 
           // Add post transitions of the place
           for (int tIndex = 0; tIndex < pos_transitions.size(); ++tIndex) {
@@ -254,7 +262,7 @@ void generateScenarioFromPetriNet(
                 // Create the synchronized event
                 double pos_t = tIndex * 0.4 + 0.8;
 
-                createTransition(disp, scenario_place, state_transition, pos_t);
+                createTransition(disp, scenario_place, state_transition, t_min, t_max, pos_t);
 
             }
           }
