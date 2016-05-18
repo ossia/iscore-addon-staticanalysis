@@ -199,7 +199,7 @@ void generateScenarioFromPetriNet(
     using namespace Scenario::Command;
 
     // search the file
-    QString filename = QFileDialog::getOpenFileName();
+    QString filename = QFileDialog::getOpenFileName(NULL, "Open Petri Net File", QDir::currentPath(), "JSON files (*.json)");
 
     // load JSON file
     QFile jsonFile(filename);
