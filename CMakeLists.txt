@@ -2,6 +2,9 @@
 cmake_minimum_required(VERSION 3.1)
 project(iscore_addon_staticanalysis LANGUAGES CXX)
 
+if(NOT TARGET iscore_plugin_ossia)
+    return()
+endif()
 iscore_common_setup()
 
 # Files & main target
