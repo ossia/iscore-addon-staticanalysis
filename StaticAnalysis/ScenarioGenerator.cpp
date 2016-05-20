@@ -33,6 +33,7 @@
 #include <Scenario/Commands/State/AddMessagesToState.hpp>
 
 #include <iscore/document/DocumentContext.hpp>
+#include <tuple>
 #include  <random>
 #include  <iterator>
 // http://stackoverflow.com/a/16421677/1495627
@@ -69,22 +70,25 @@ struct random_selector
         RandomGenerator gen;
 };
 
-class Transition{
+class Place{
   public:
     QString name;
+    QList<QString> pre;
+    QList<QString> pos;
 
-  friend bool operator==(const Transition& t, const QString& other)
+  friend bool operator==(const Place& p, const QString& other)
   {
-      return t.name == other;
+      return p.name == other;
   }
 
-  friend bool operator!=(const Transition& t, const QString& other)
+  friend bool operator!=(const Place& p, const QString& other)
   {
-      return t.name != other;
+      return p.name != other;
   }
+
 };
 
-auto createTree(
+auto& createTree(
         CommandDispatcher<>& disp,
         const iscore::DocumentContext& ctx)
 {
@@ -95,7 +99,6 @@ auto createTree(
             .get(Ossia::OSCProtocolFactory::static_concreteFactoryKey());
 
     auto& tree = ctx.plugin<Explorer::DeviceDocumentPlugin>();
-    auto& root = tree.rootNode();
 
     // First create a device
     auto settings = settings_factory->defaultSettings();
@@ -103,14 +106,27 @@ auto createTree(
     auto create_dev_cmd = new Explorer::Command::AddDevice(tree, settings);
     disp.submitCommand(create_dev_cmd);
 
+    return tree;
+}
+
+template<typename Val>
+auto createTreeNode(
+        CommandDispatcher<>& disp,
+        Explorer::DeviceDocumentPlugin& tree,
+        QString name,
+        Val&& value
+        )
+{
     // Find the created device
-    auto& created_device_root = Device::getNodeFromAddress(root, State::Address{settings.name, {}});
+    auto& root = tree.rootNode();
+    auto& created_device_root = Device::getNodeFromAddress(root, State::Address{"local", {}});
 
     // Create some node
     Device::AddressSettings theNode;
-    theNode.name = "myVar";
+    theNode.name = name;
+    theNode.clipMode = Device::ClipMode::Free;
     theNode.ioType = Device::IOType::InOut;
-    theNode.value = State::Value::fromValue(false);
+    theNode.value = State::Value::fromValue(value);
 
     auto create_addr_cmd = new Explorer::Command::AddAddress(
                 tree,
@@ -121,18 +137,23 @@ auto createTree(
     disp.submitCommand(create_addr_cmd);
 }
 
+template<typename Val>
 auto addMessageToState(
         CommandDispatcher<>& disp,
-        Scenario::StateModel& state)
+        Scenario::StateModel& state,
+        QString device,
+        QString address,
+        Val&& value
+        )
 {
     auto cmd = new Scenario::Command::AddMessagesToState(
                 state.messages(),
                 { // A list
                     { // Of messages
                       { // The address
-                          "local", {"myVar"}
+                          device, {address}
                       },
-                      State::Value::fromValue(false) // the value
+                      State::Value::fromValue(value) // the value
                   }
                 });
 
@@ -192,7 +213,7 @@ void createTrigger(
    disp.submitCommand(set_max_cmd);
 }
 
-auto& createPlace(
+auto createPlace(
     CommandDispatcher<>& disp,
     const Scenario::ScenarioModel& scenario,
     const Scenario::StateModel& startState,
@@ -229,7 +250,35 @@ auto& createPlace(
 
   auto& scenario_pattern = static_cast<Scenario::ScenarioModel&>(pattern.processes.at(create_scenario_cmd->processId()));
 
-  return scenario_pattern;
+  return std::tie(pattern_state, scenario_pattern, loop_state, loop);
+}
+
+template<typename Scenario_T>
+void addConditionTrigger(
+        CommandDispatcher<>& disp,
+        const Scenario_T& scenario,
+        const Scenario::StateModel& state,
+        QList<QString> tList
+        )
+{
+    using namespace Scenario;
+    using namespace Scenario::Command;
+
+    QList<QString> condition;
+    foreach (QString atom, tList){
+        condition << "local:/" + atom + "==1";
+    }
+    QString expression = condition.join(" or ");
+
+    // Try to parse an expression; if it is correctly parsed, add the time node
+    auto maybe_parsed_expression = State::parseExpression(expression);
+    if(maybe_parsed_expression)
+    {
+        // 4. Set the expression to the trigger
+        auto& timenode = parentTimeNode(state, scenario);
+        auto expr_command = new SetTrigger(timenode, *maybe_parsed_expression);
+        disp.submitCommand(expr_command);
+    }
 }
 
 auto& createTransition(
@@ -255,6 +304,37 @@ auto& createTransition(
 }
 
 
+QList<QString> JsonArrayToStringList(
+        QJsonArray list)
+{
+    QList<QString> output;
+    foreach(QJsonValue s, list){
+        output << s.toString();
+    }
+    return output;
+}
+
+QJsonObject loadJsonFile(){
+    // search the file
+    QString filename = QFileDialog::getOpenFileName(NULL,
+                                                    "Open Petri Net File",
+                                                    QDir::currentPath(),
+                                                    "JSON files (*.json)");
+
+    // load JSON file
+    QFile jsonFile(filename);
+    if (!jsonFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+        qWarning("Couldn't open save file.");
+        return QJsonObject();
+    }
+
+    QByteArray jsonData = jsonFile.readAll();
+    jsonFile.close();
+
+    QJsonDocument loadJson(QJsonDocument::fromJson(jsonData));
+    return loadJson.object();
+}
+
 void generateScenarioFromPetriNet(
         const Scenario::ScenarioModel& scenario,
         CommandDispatcher<>& disp
@@ -263,79 +343,89 @@ void generateScenarioFromPetriNet(
     using namespace Scenario;
     using namespace Scenario::Command;
 
-    createTree(disp, iscore::IDocument::documentContext(scenario));
-    // search the file
-    QString filename = QFileDialog::getOpenFileName(NULL, "Open Petri Net File", QDir::currentPath(), "JSON files (*.json)");
+    // Load JSON file
+    QJsonObject json = loadJsonFile();
+    if (json.isEmpty()){ return; }
 
-    // load JSON file
-    QFile jsonFile(filename);
-    if (!jsonFile.open(QIODevice::ReadOnly | QIODevice::Text)){
-      qWarning("Couldn't open save file.");
-      return;
-    }
-    QByteArray jsonData = jsonFile.readAll();
-    jsonFile.close();
-    QJsonDocument loadJson(QJsonDocument::fromJson(jsonData));
-    QJsonObject json = loadJson.object();
+    // Create Device Tree
+    auto& device_tree = createTree(disp, iscore::IDocument::documentContext(scenario));
 
     // Load Transitions
     QJsonArray transitionsArray = json["transitions"].toArray();
-    QList<Transition> tList;
     for (int tIndex = 0; tIndex < transitionsArray.size(); ++tIndex) {
         QJsonObject tObject = transitionsArray[tIndex].toObject();
-        // qWarning() << tObject;
-        Transition t;
-        t.name = tObject["name"].toString();
-        tList.append(t);
+        createTreeNode(disp, device_tree, tObject["name"].toString(), false);  // adding transition variable to device tree
     }
 
     // default durations of transitions
     TimeValue t_min = TimeValue::fromMsecs(3000);
     TimeValue t_max = TimeValue::fromMsecs(5000);
 
-
     // initial state of the scenario
     auto& first_state = *states(scenario).begin();
     auto& state_initial_transition = createTransition(disp, scenario, first_state, t_min, t_max, 0.02);
 
-    // create loops for each place
-    // Load Places
+    // Parsing Places from JSON file
     QJsonArray placesArray = json["places"].toArray();
+    QList<Place> pList;
+    QList<QString> finalTransitions, initialTransitions;
     for (int pIndex = 0; pIndex < placesArray.size(); ++pIndex) {
         QJsonObject pObject = placesArray[pIndex].toObject();
-        // qWarning() << pObject;
-        QJsonArray pos_transitions = pObject["post"].toArray();
-        QJsonArray pre_transitions = pObject["pre"].toArray();
+        Place p;
+        p.name = pObject["name"].toString();
+        p.pos = JsonArrayToStringList(pObject["post"].toArray());
+        p.pre = JsonArrayToStringList(pObject["pre"].toArray());
+        pList.append(p);
 
-        if (pos_transitions.empty()){               // Final Place
-          qWarning() << "It's a final place";
-        } else if (pre_transitions.empty()){        // Initial Place
-          qWarning() << "It's an initial place";
-        } else {                                    // Segmentation Place
-          double pos_y = pIndex * 0.1 + 0.1;
+        if (p.pos.empty()){  // it's final place
+            finalTransitions = p.pre;
+        } else if (p.pre.empty()){  // it's initial place
+            initialTransitions = p.pos;
+        }
+    }
 
-          auto& scenario_place = createPlace(disp, scenario, state_initial_transition, pos_y);
+    // create loops for each place
+    double pos_y = 0.05;
+    foreach (Place p, pList) {
+        if (!(p.pre.empty() || p.pos.empty())){
+
+          auto place = createPlace(disp, scenario, state_initial_transition, pos_y);
+          auto& scenario_place = std::get<1>(place);
+          auto& pattern_state_place = std::get<0>(place);
+          auto& loop_state = std::get<2>(place);
+          auto& loop = std::get<3>(place);
           auto& start_state_id = *scenario_place.startEvent().states().begin();
           auto& place_start_state = scenario_place.states.at(start_state_id);
 
-          // TODO change me
-          addMessageToState(disp, place_start_state);
+          auto& state_place = createTransition(disp, scenario_place, place_start_state,  TimeValue::zero(), TimeValue::infinite(), 0.4);
 
-
-          auto& state_transition = createTransition(disp, scenario_place, place_start_state,  TimeValue::zero(), TimeValue::infinite(), 0.4);
+          // Add pre transitions of the place
+          foreach (QString t, p.pre){
+              addMessageToState(disp, state_place, "local", t, false);
+          }
 
           // Add post transitions of the place
-          for (int tIndex = 0; tIndex < pos_transitions.size(); ++tIndex) {
-            QString tName = pos_transitions[tIndex].toString();
-            auto elt_it = find(tList, tName);
-            if (elt_it != tList.end()) {
-                // Create the synchronized event
-                double pos_t = tIndex * 0.4 + 0.8;
+          double pos_t = 0.8;
+          foreach (QString t, p.pos){
+              auto& state_transition = createTransition(disp, scenario_place, state_place, t_min, t_max, pos_t);
 
-                createTransition(disp, scenario_place, state_transition, t_min, t_max, pos_t);
+              addMessageToState(disp, state_transition, "local", t, true);
+              addMessageToState(disp, pattern_state_place, "local", t, false);
 
-            }
+              pos_t += 0.4;
           }
+
+          // Add stop condition of the place loop
+          addConditionTrigger(disp, scenario, loop_state, finalTransitions);
+
+          // Add stop condition of the loop pattern (post conditions)
+          addConditionTrigger(disp, loop, pattern_state_place, p.pos);
+
+          // Add conditon for start the loop (pre conditions)
+          addConditionTrigger(disp, scenario_place, state_place, p.pre);
+
+          // Increment pos Y
+          pos_y += 0.1;
         }
     }
 }
