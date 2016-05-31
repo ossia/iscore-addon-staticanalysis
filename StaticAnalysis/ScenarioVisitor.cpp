@@ -22,11 +22,12 @@
 #include <StaticAnalysis/ScenarioVisitor.hpp>
 #include <State/Message.hpp>
 #include <State/Value.hpp>
-#include <core/presenter/MenubarManager.hpp>
+
 #include <iscore/document/DocumentInterface.hpp>
 #include <iscore/plugins/application/GUIApplicationContextPlugin.hpp>
 #include <iscore/tools/SettableIdentifier.hpp>
 #include <iscore/tools/std/Algorithms.hpp>
+#include <iscore/menu/MenuInterface.hpp>
 #include <core/document/Document.hpp>
 
 #include <QApplication>
@@ -40,8 +41,8 @@
 #include <StaticAnalysis/ScenarioGenerator.hpp>
 #include <StaticAnalysis/TIKZConversion.hpp>
 
-stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app):
-    iscore::GUIApplicationContextPlugin(app, "TemporalAutomatasApplicationPlugin", nullptr)
+stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& app):
+    iscore::GUIApplicationContextPlugin{app}
 {
     m_himito = new QAction{tr("Generate scenario from Petri Net"), nullptr};
     connect(m_himito, &QAction::triggered, [&] () {
@@ -200,21 +201,15 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::ApplicationContext& app
     });
 }
 
-void stal::ApplicationPlugin::populateMenus(iscore::MenubarManager* menus)
+iscore::GUIElements stal::ApplicationPlugin::makeGUIElements()
 {
-    menus->insertActionIntoToplevelMenu(
-                iscore::ToplevelMenuElement::FileMenu,
-                m_himito);
-    menus->insertActionIntoToplevelMenu(
-                iscore::ToplevelMenuElement::FileMenu,
-                m_generate);
-    menus->insertActionIntoToplevelMenu(
-                iscore::ToplevelMenuElement::FileMenu,
-                m_convert);
-    menus->insertActionIntoToplevelMenu(
-                iscore::ToplevelMenuElement::FileMenu,
-                m_metrics);
-    menus->insertActionIntoToplevelMenu(
-                iscore::ToplevelMenuElement::FileMenu,
-                m_TIKZexport);
+    auto& m = context.menus.get().at(iscore::Menus::Export());
+    QMenu* menu = m.menu();
+    menu->addAction(m_himito);
+    menu->addAction(m_generate);
+    menu->addAction(m_convert);
+    menu->addAction(m_metrics);
+    menu->addAction(m_TIKZexport);
+
+    return {};
 }

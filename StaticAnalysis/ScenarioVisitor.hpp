@@ -14,14 +14,16 @@ class ApplicationPlugin :
         public iscore::GUIApplicationContextPlugin
 {
     public:
-        ApplicationPlugin(const iscore::ApplicationContext& app);
+        ApplicationPlugin(const iscore::GUIApplicationContext& app);
 
-        void populateMenus(iscore::MenubarManager*) override;
+    private:
+        iscore::GUIElements makeGUIElements() override;
 
         QAction* m_himito{};
         QAction* m_generate{};
         QAction* m_convert{};
         QAction* m_metrics{};
         QAction* m_TIKZexport{};
+
 };
 }

@@ -29,7 +29,7 @@ class iscore_addon_staticanalysis final:
         virtual ~iscore_addon_staticanalysis() = default;
 
         iscore::GUIApplicationContextPlugin* make_applicationPlugin(
-                const iscore::ApplicationContext& app) override;
+                const iscore::GUIApplicationContext& app) override;
 
         iscore::Version version() const override;
         UuidKey<iscore::Plugin> key() const override;
