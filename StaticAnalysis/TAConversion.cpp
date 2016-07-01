@@ -11,6 +11,48 @@ namespace stal
 {
 namespace TA
 {
+const int uppaal_division_factor = 100; // used because uppaal numbers don't go over 32768...
+int to_operator(State::Relation::Operator op)
+{
+    switch(op)
+    {
+        case State::Relation::Equal:
+            return 1;
+        case State::Relation::Lower:
+            return 2;
+        case State::Relation::LowerEqual:
+            return 3;
+        case State::Relation::Greater:
+            return 4;
+        case State::Relation::GreaterEqual:
+            return 5;
+        default:
+            return 0;
+            // TODO !=
+    }
+}
+void set_point_condition(Point& point, const State::Expression& e)
+{
+    point.condition = 0;
+    if(e.childCount() != 0)
+    {
+        auto& rel = e.childAt(0);
+        if(rel.is<State::Relation>())
+        {
+            const State::Relation& r = rel.get<State::Relation>();
+            auto val_ptr = r.rhs.target<State::Value>();
+            if(val_ptr)
+            {
+                point.condition = to_operator(r.op);
+
+                auto val = State::convert::value<int>(*val_ptr);
+                point.conditionValue = val;
+            }
+        }
+    }
+}
+
+
 template<typename Container, typename Stream>
 static void print(const Container& vec, Stream& s)
 {
@@ -28,7 +70,7 @@ static void print(const Point& pt, Stream& stream)
     QString s = QString("%1 = Point(%2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12, %13);\n")
             .arg(pt.name)
             .arg(pt.condition)
-            .arg(pt.conditionValue)
+            .arg(pt.conditionValue / uppaal_division_factor)
             .arg(pt.en)
             .arg(pt.conditionMessage)
             .arg(pt.event)
@@ -83,8 +125,8 @@ static void print(const Flexible& c, Stream& stream)
 {
     QString s = QString("%1 = Flexible(%2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12);\n")
             .arg(c.name)
-            .arg((int)c.dmin.msec())
-            .arg(c.finite ? (int)c.dmax.msec() : 0)
+            .arg((int)c.dmin.msec() / uppaal_division_factor)
+            .arg(c.finite ? (int)c.dmax.msec() / uppaal_division_factor : 0)
             .arg(c.finite ? "true" : "false")
             .arg(c.event_s)
             .arg(c.event_min)
@@ -106,7 +148,7 @@ static void print(const Rigid& c, Stream& stream)
 {
     QString s = QString("%1 = Rigid(%2, %3, %4, %5, %6, %7, %8, %9);\n")
             .arg(c.name)
-            .arg((int)c.dur.msec())
+            .arg((int)c.dur.msec() / uppaal_division_factor)
             .arg(c.event_s)
             .arg(c.event_e1)
             .arg(c.skip_p)
@@ -128,7 +170,7 @@ static void print(const Event& c, Stream& stream)
             .arg(c.name)
             .arg(c.message)
             .arg(c.event)
-            .arg((int)c.date.msec())
+            .arg((int)c.date.msec() / uppaal_division_factor)
             .arg(c.val);
 
     stream << s.toLatin1().constData();
@@ -141,7 +183,7 @@ static void print(const Event_ND& c, Stream& stream)
             .arg(c.name)
             .arg(c.message)
             .arg(c.event)
-            .arg((int)c.date.msec())
+            .arg((int)c.date.msec() / uppaal_division_factor)
             .arg(c.val);
 
     stream << s.toLatin1().constData();
@@ -338,7 +380,15 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
     tn_point.skip = "skip_" + tn_name;
     tn_point.event_t = "ok_" + tn_name;
 
-    tn_point.condition = 0; // CHECKME
+    if(timenode.trigger()->active())
+    {
+        set_point_condition(tn_point, timenode.trigger()->expression());
+    }
+    else
+    {
+        tn_point.condition = 0;
+        tn_point.conditionValue = 0;
+    }
     tn_point.conditionMessage = "msg" + tn_name;
 
     tn_point.urgent = true;
@@ -401,6 +451,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
 
     // If there is a trigger we create a corresponding event.
 
+    if(timenode.trigger()->active())
     {
         TA::Event_ND node_event{
             "EventND_" + tn_name,
@@ -412,6 +463,20 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
 
         scenario.events_nd.push_back(node_event);
     }
+    else
+    {
+        TA::Event node_event{
+            "Event_" + tn_name,
+             tn_point.conditionMessage,
+             tn_point.event,
+             timenode.date(), // TODO throw a rand
+             0
+        };
+
+        scenario.events.push_back(node_event);
+
+    }
+
     if(! timenode.trigger()->active())
     {
         // TODO
@@ -481,7 +546,7 @@ void TAVisitor::visit(const Scenario::EventModel &event)
     point.event_t = "ok_" + event_name;
     point.event_e = "emax_" + event_name;
 
-    point.condition = 0;
+    set_point_condition(point, event.condition());
     point.conditionMessage = "msg" + event_name;
 
     point.event_s = previous_timenode_point.event_e;
@@ -506,15 +571,15 @@ void TAVisitor::visit(const Scenario::EventModel &event)
         scenario.mixs.push_back(point_start_mix);
     }
 
-    TA::Event_ND node_event{
-        "EventND_" + event_name,
+    TA::Event node_event{
+        "Event_" + event_name,
                 point.conditionMessage,
                 point.event_e,
                 timenode.date(), // TODO throw a rand
                 0
     };
 
-    scenario.events_nd.push_back(node_event);
+    scenario.events.push_back(node_event);
 
     scenario.points.push_back(point);
 
