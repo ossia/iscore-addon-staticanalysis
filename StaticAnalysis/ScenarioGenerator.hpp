@@ -3,17 +3,17 @@
 
 namespace Scenario
 {
-class ScenarioModel;
+class ProcessModel;
 }
 namespace stal
 {
     void generateScenario(
-            const Scenario::ScenarioModel& scenar,
+            const Scenario::ProcessModel& scenar,
             int N,
             CommandDispatcher<>&);
 
     void generateScenarioFromPetriNet(
-            const Scenario::ScenarioModel& scenario,
+            const Scenario::ProcessModel& scenario,
             CommandDispatcher<>& disp
             );
 }

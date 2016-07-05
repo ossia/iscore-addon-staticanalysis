@@ -43,13 +43,13 @@ class LanguageVisitor;
     // scenario sx of c1
     */
 template<>
-class LanguageVisitor<Scenario::ScenarioModel>
+class LanguageVisitor<Scenario::ProcessModel>
 {
     public:
-        const Scenario::ScenarioModel& m_scenar;
+        const Scenario::ProcessModel& m_scenar;
         QString text;
 
-        LanguageVisitor(const Scenario::ScenarioModel& scenar):
+        LanguageVisitor(const Scenario::ProcessModel& scenar):
             m_scenar{scenar}
         {
             text += " {"
@@ -119,10 +119,10 @@ class LanguageVisitor<Scenario::ScenarioModel>
 
             for(auto& process : c.processes)
             {
-                if(auto scenar = dynamic_cast<Scenario::ScenarioModel*>(&process))
+                if(auto scenar = dynamic_cast<Scenario::ProcessModel*>(&process))
                 {
                     text += "scenario " + id(*scenar)
-                            + LanguageVisitor<Scenario::ScenarioModel>{*scenar}.text
+                            + LanguageVisitor<Scenario::ProcessModel>{*scenar}.text
                             + " of " + id(c)
                             + QString("\n");
                 }
@@ -280,13 +280,13 @@ static int sum_all(const std::vector<int>& vec)
 template<class>
 class HalsteadVisitor;
 template<>
-class HalsteadVisitor<Scenario::ScenarioModel>
+class HalsteadVisitor<Scenario::ProcessModel>
 {
     public:
-        const Scenario::ScenarioModel& m_scenar;
+        const Scenario::ProcessModel& m_scenar;
         ScenarioFactors f;
 
-        HalsteadVisitor(const Scenario::ScenarioModel& scenar):
+        HalsteadVisitor(const Scenario::ProcessModel& scenar):
             m_scenar{scenar}
         {
             f.operators.lbrace += 1;
@@ -337,11 +337,11 @@ class HalsteadVisitor<Scenario::ScenarioModel>
 
             for(auto& process : c.processes)
             {
-                if(auto scenar = dynamic_cast<Scenario::ScenarioModel*>(&process))
+                if(auto scenar = dynamic_cast<Scenario::ProcessModel*>(&process))
                 {
                     f.operators.scenario += 1;
                     f.operands.variables[id(*scenar)] += 1;
-                    f += HalsteadVisitor<Scenario::ScenarioModel>{*scenar}.f;
+                    f += HalsteadVisitor<Scenario::ProcessModel>{*scenar}.f;
                     f.operators.of += 1;
                     f.operands.variables[id(c)] += 1;
                 }
@@ -396,15 +396,15 @@ class HalsteadVisitor<Scenario::ScenarioModel>
 };
 
 QString stal::Metrics::toScenarioLanguage(
-        const Scenario::ScenarioModel& s)
+        const Scenario::ProcessModel& s)
 {
-    return LanguageVisitor<Scenario::ScenarioModel>{s}.text;
+    return LanguageVisitor<Scenario::ProcessModel>{s}.text;
 }
 
 stal::Metrics::Halstead::Factors
-stal::Metrics::Halstead::ComputeFactors(const Scenario::ScenarioModel& scenar)
+stal::Metrics::Halstead::ComputeFactors(const Scenario::ProcessModel& scenar)
 {
-    auto sf = HalsteadVisitor<Scenario::ScenarioModel>{scenar}.f;
+    auto sf = HalsteadVisitor<Scenario::ProcessModel>{scenar}.f;
     stal::Metrics::Halstead::Factors factors;
     factors.eta1 = sum_unique(sf.operators.toVector());
     factors.eta2 = sum_unique(sf.operands.toVector());
@@ -507,8 +507,8 @@ struct MarkedConstraints
     using Mark = int;
     Mark currentMark = 0;
     static const constexpr int NoMark = -1;
-    const Scenario::ScenarioModel& m_scenar;
-    MarkedConstraints(const Scenario::ScenarioModel& scenar):
+    const Scenario::ProcessModel& m_scenar;
+    MarkedConstraints(const Scenario::ProcessModel& scenar):
         m_scenar{scenar}
     {
         for(const auto& cst : scenar.constraints)
@@ -595,9 +595,9 @@ class ProgramVisitor
         std::map<Id<Scenario::TimeNodeModel>, Mark> nodes;
         std::map<Id<Scenario::StateModel>, Mark> states;
 
-        const Scenario::ScenarioModel& m_scenar;
+        const Scenario::ProcessModel& m_scenar;
     public:
-        ProgramVisitor(const Scenario::ScenarioModel& scenar):
+        ProgramVisitor(const Scenario::ProcessModel& scenar):
             m_scenar{scenar}
         {
             for(const auto& elt : scenar.constraints)
@@ -722,7 +722,7 @@ class ProgramVisitor
 
 };
 
-static auto startingTimeNodes(const Program& program, const Scenario::ScenarioModel& scenario)
+static auto startingTimeNodes(const Program& program, const Scenario::ProcessModel& scenario)
 {
     std::list<Id<Scenario::TimeNodeModel>> startingNodes;
     for(const auto& node_id : program.nodes)
@@ -764,11 +764,11 @@ class CyclomaticVisitor
 
     public:
         const Program& m_program;
-        const Scenario::ScenarioModel& m_scenar;
+        const Scenario::ProcessModel& m_scenar;
 
         CyclomaticVisitor(
                 const Program& program,
-                const Scenario::ScenarioModel& scenar):
+                const Scenario::ProcessModel& scenar):
             m_program{program},
             m_scenar{scenar}
         {
@@ -1045,7 +1045,7 @@ class CyclomaticVisitor
 
 stal::Metrics::Cyclomatic::Factors
 stal::Metrics::Cyclomatic::ComputeFactors(
-        const Scenario::ScenarioModel& scenar)
+        const Scenario::ProcessModel& scenar)
 {
     ProgramVisitor v(scenar);
     auto programs = v.programs();
@@ -1064,7 +1064,7 @@ stal::Metrics::Cyclomatic::ComputeFactors(
 }
 
 stal::Metrics::Cyclomatic::Factors stal::Metrics::Cyclomatic::ComputeFactors2(
-        const Scenario::ScenarioModel& scenar)
+        const Scenario::ProcessModel& scenar)
 {
     ProgramVisitor v(scenar);
     auto programs = v.programs();

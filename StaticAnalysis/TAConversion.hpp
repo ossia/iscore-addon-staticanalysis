@@ -18,7 +18,7 @@ class TimeNodeModel;
 class EventModel;
 class ConstraintModel;
 class StateModel;
-class ScenarioModel;
+class ProcessModel;
 }
 namespace stal
 {
@@ -247,7 +247,7 @@ struct ScenarioContent
 struct TAScenario : public ScenarioContent
 {
     template<typename T>
-    TAScenario(const Scenario::ScenarioModel& s, const T& constraint):
+    TAScenario(const Scenario::ProcessModel& s, const T& constraint):
         iscore_scenario{s},
         self{constraint},
         event_s{constraint.event_s},
@@ -259,7 +259,7 @@ struct TAScenario : public ScenarioContent
         broadcasts.insert(kill);
     }
 
-    const Scenario::ScenarioModel& iscore_scenario;
+    const Scenario::ProcessModel& iscore_scenario;
 
     TA::Constraint self; // The scenario is considered similar to a constraint.
 
@@ -272,7 +272,7 @@ struct TAVisitor
 {
     TA::TAScenario scenario;
     template<typename T>
-    TAVisitor(const Scenario::ScenarioModel& s, const T& constraint):
+    TAVisitor(const Scenario::ProcessModel& s, const T& constraint):
         scenario{s, constraint}
     {
         visit(s);
@@ -291,7 +291,7 @@ private:
     void visit(
             const Scenario::StateModel& state);
     void visit(
-            const Scenario::ScenarioModel& s);
+            const Scenario::ProcessModel& s);
 };
 
 QString makeScenario(const Scenario::ConstraintModel& s);

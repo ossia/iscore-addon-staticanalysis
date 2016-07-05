@@ -4,7 +4,7 @@
 
 namespace Scenario
 {
-class ScenarioModel;
+class ProcessModel;
 }
 namespace stal
 {
@@ -19,7 +19,7 @@ struct Factors
         double N1{};
         double N2{};
 };
-Factors ComputeFactors(const Scenario::ScenarioModel& scenar);
+Factors ComputeFactors(const Scenario::ProcessModel& scenar);
 inline double ProgramLength(const Factors& f)
 {
     return f.eta1 * std::log2(f.eta1) + f.eta2 * std::log2(f.eta2);
@@ -67,8 +67,8 @@ struct Factors
         int connectedComponents{};
 };
 
-Factors ComputeFactors(const Scenario::ScenarioModel& scenar);
-Factors ComputeFactors2(const Scenario::ScenarioModel& scenar);
+Factors ComputeFactors(const Scenario::ProcessModel& scenar);
+Factors ComputeFactors2(const Scenario::ProcessModel& scenar);
 
 inline double Complexity(const Factors& f)
 {
@@ -76,6 +76,6 @@ inline double Complexity(const Factors& f)
 }
 }
 
-QString toScenarioLanguage(const Scenario::ScenarioModel& s);
+QString toScenarioLanguage(const Scenario::ProcessModel& s);
 }
 }

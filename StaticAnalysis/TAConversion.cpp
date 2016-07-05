@@ -269,7 +269,7 @@ static void visitProcesses(
 {
     for(const auto& process : c.processes)
     {
-        if(auto scenario = dynamic_cast<const Scenario::ScenarioModel*>(&process))
+        if(auto scenario = dynamic_cast<const Scenario::ProcessModel*>(&process))
         {
             TAVisitor v{*scenario, ta_cst};
 
@@ -598,7 +598,7 @@ void TAVisitor::visit(const Scenario::StateModel &state)
 {
 }
 
-void TAVisitor::visit(const Scenario::ScenarioModel &s)
+void TAVisitor::visit(const Scenario::ProcessModel &s)
 {
     using namespace Scenario;
     const auto& eev = s.endEvent();

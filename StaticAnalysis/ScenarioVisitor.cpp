@@ -56,7 +56,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         if(baseConstraint.processes.size() == 0)
             return;
 
-        auto firstScenario = dynamic_cast<Scenario::ScenarioModel*>(&*baseConstraint.processes.begin());
+        auto firstScenario = dynamic_cast<Scenario::ProcessModel*>(&*baseConstraint.processes.begin());
         if(!firstScenario)
             return;
 
@@ -75,7 +75,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         if(baseConstraint.processes.size() == 0)
             return;
 
-        auto firstScenario = dynamic_cast<Scenario::ScenarioModel*>(&*baseConstraint.processes.begin());
+        auto firstScenario = dynamic_cast<Scenario::ProcessModel*>(&*baseConstraint.processes.begin());
         if(!firstScenario)
             return;
 
@@ -138,7 +138,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
             return;
 
         Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
-        auto& baseScenario = static_cast<Scenario::ScenarioModel&>(*base.baseScenario().constraint().processes.begin());
+        auto& baseScenario = static_cast<Scenario::ProcessModel&>(*base.baseScenario().constraint().processes.begin());
 
         using namespace stal::Metrics;
         // Language
@@ -169,7 +169,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         if(!doc)
             return;
         Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
-        auto& baseScenario = static_cast<Scenario::ScenarioModel&>(*base.baseScenario().constraint().processes.begin());
+        auto& baseScenario = static_cast<Scenario::ProcessModel&>(*base.baseScenario().constraint().processes.begin());
 
         QFileDialog d{qApp->activeWindow(), tr("Save Document As")};
         d.setNameFilter(("tex files (*.tex)"));
