@@ -23,5 +23,5 @@ iscore::Version iscore_addon_staticanalysis::version() const
 
 UuidKey<iscore::Plugin> iscore_addon_staticanalysis::key() const
 {
-    return "e1ef22f4-5fa3-4992-9f88-0e1ec5b5bb7f";
+    return_uuid("e1ef22f4-5fa3-4992-9f88-0e1ec5b5bb7f");
 }
