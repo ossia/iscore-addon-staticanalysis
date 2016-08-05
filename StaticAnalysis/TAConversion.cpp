@@ -12,7 +12,7 @@ namespace stal
 namespace TA
 {
 const int uppaal_division_factor = 100; // used because uppaal numbers don't go over 32768...
-int to_operator(State::Relation::Operator op)
+int to_operator(State::Relation::Comparator op)
 {
     switch(op)
     {
