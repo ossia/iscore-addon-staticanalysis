@@ -96,7 +96,7 @@ auto& createTree(
     // Get necessary objects : OSC device factory, root node, etc.
     auto settings_factory = ctx.app.components
             .factory<Device::DynamicProtocolList>()
-            .get(Ossia::OSCProtocolFactory::static_concreteFactoryKey());
+            .get(Ossia::Protocols::OSCProtocolFactory::static_concreteFactoryKey());
 
     auto& tree = ctx.plugin<Explorer::DeviceDocumentPlugin>();
 
