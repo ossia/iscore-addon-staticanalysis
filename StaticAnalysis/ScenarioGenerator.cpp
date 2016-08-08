@@ -25,9 +25,9 @@
 #include <Scenario/Commands/TimeNode/SetTrigger.hpp>
 #include <Explorer/Commands/Add/AddDevice.hpp>
 #include <Explorer/Commands/Add/AddAddress.hpp>
-#include <OSSIA/Protocols/OSC/OSCSpecificSettings.hpp>
-#include <OSSIA/Protocols/OSC/OSCProtocolFactory.hpp>
-#include <OSSIA/Protocols/OSC/OSCDevice.hpp>
+#include <Engine/Protocols/OSC/OSCSpecificSettings.hpp>
+#include <Engine/Protocols/OSC/OSCProtocolFactory.hpp>
+#include <Engine/Protocols/OSC/OSCDevice.hpp>
 #include <Device/Protocol/ProtocolList.hpp>
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Scenario/Commands/State/AddMessagesToState.hpp>
@@ -96,7 +96,7 @@ auto& createTree(
     // Get necessary objects : OSC device factory, root node, etc.
     auto settings_factory = ctx.app.components
             .factory<Device::DynamicProtocolList>()
-            .get(Ossia::Protocols::OSCProtocolFactory::static_concreteFactoryKey());
+            .get(Engine::Network::OSCProtocolFactory::static_concreteFactoryKey());
 
     auto& tree = ctx.plugin<Explorer::DeviceDocumentPlugin>();
 
