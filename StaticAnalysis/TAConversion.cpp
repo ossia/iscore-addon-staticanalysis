@@ -493,7 +493,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
         scenario.mixs.push_back(point_start_mix);
     }
 
-    tn_point.comment = "TimeNode Name : " + timenode.metadata.getName() + ". Label : " + timenode.metadata.getLabel();
+    tn_point.comment = "TimeNode Name : " + timenode.metadata().getName() + ". Label : " + timenode.metadata().getLabel();
 
     /*
     // We create a flexible that will go to each event of the timenode.
@@ -556,7 +556,7 @@ void TAVisitor::visit(const Scenario::EventModel &event)
 
     point.urgent = true;
 
-    point.comment = "EventNode Name : " + event.metadata.getName() + ". Label : " + event.metadata.getLabel();
+    point.comment = "EventNode Name : " + event.metadata().getName() + ". Label : " + event.metadata().getLabel();
     if(!event.condition().hasChildren())
     {
         // No condition
@@ -677,7 +677,7 @@ void TAVisitor::visit(const Scenario::ConstraintModel &c)
         rigid.skip = skip;
 
         // Register all the new elements
-        rigid.comment = "Name : " + c.metadata.getName() + ". Label : " + c.metadata.getLabel();
+        rigid.comment = "Name : " + c.metadata().getName() + ". Label : " + c.metadata().getLabel();
         scenario.rigids.push_back(rigid);
         scenario.broadcasts.insert(rigid.event_s);
         scenario.broadcasts.insert(rigid.skip);
@@ -709,7 +709,7 @@ void TAVisitor::visit(const Scenario::ConstraintModel &c)
         QString cst_name = name(c);
         flexible.kill = "kill_" + cst_name;
 
-        flexible.comment = "Name : " + c.metadata.getName() + ". Label : " + c.metadata.getLabel();
+        flexible.comment = "Name : " + c.metadata().getName() + ". Label : " + c.metadata().getLabel();
         scenario.flexibles.push_back(flexible);
         scenario.broadcasts.insert(flexible.event_s);
         scenario.broadcasts.insert(flexible.skip);

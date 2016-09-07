@@ -1089,7 +1089,7 @@ stal::Metrics::Cyclomatic::Factors stal::Metrics::Cyclomatic::ComputeFactors2(
             for(const auto& elt_id : block.constraints)
             {
                 auto& elt = scenar.constraints.at(elt_id);
-                elt.metadata.setLabel(QString::number(program_n) + " - " + QString::number(i));
+                elt.metadata().setLabel(QString::number(program_n) + " - " + QString::number(i));
 
 
                 auto& tn = endTimeNode(elt, scenar);
@@ -1104,12 +1104,12 @@ stal::Metrics::Cyclomatic::Factors stal::Metrics::Cyclomatic::ComputeFactors2(
             for(const auto& elt_id : block.events)
             {
                 auto& elt = scenar.events.at(elt_id);
-                elt.metadata.setLabel(QString::number(program_n) + " - " + QString::number(i));
+                elt.metadata().setLabel(QString::number(program_n) + " - " + QString::number(i));
             }
             for(const auto& elt_id : block.nodes)
             {
                 auto& elt = scenar.timeNodes.at(elt_id);
-                elt.metadata.setLabel(QString::number(program_n) + " - " + QString::number(i));
+                elt.metadata().setLabel(QString::number(program_n) + " - " + QString::number(i));
 
                 for(const auto& event : elt.events())
                 {
