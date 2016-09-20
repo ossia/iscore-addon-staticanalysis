@@ -147,11 +147,11 @@ auto addMessageToState(
         )
 {
     auto cmd = new Scenario::Command::AddMessagesToState(
-                state.messages(),
+                state,
                 { // A list
                     { // Of messages
                       { // The address
-                          device, {address}
+                          {device, {address}}
                       },
                       State::Value::fromValue(value) // the value
                   }
