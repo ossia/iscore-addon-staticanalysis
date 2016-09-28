@@ -224,7 +224,7 @@ static QString print(const ScenarioContent& c)
 
         output << "///// SYSTEM /////\n";
         output << "system\n";
-        for_each_in_tuple(std::tie(
+        ossia::for_each_in_tuple(std::tie(
                               c.events,
                               c.events_nd,
                               c.rigids,
@@ -529,7 +529,7 @@ void TAVisitor::visit(const Scenario::EventModel &event)
     using namespace Scenario;
     const auto& timenode = parentTimeNode(event, scenario.iscore_scenario);
     QString tn_name = name(timenode);
-    auto it = find_if(scenario.points, [&] (const auto& point ) { return point.name == tn_name; });
+    auto it = ossia::find_if(scenario.points, [&] (const auto& point ) { return point.name == tn_name; });
     ISCORE_ASSERT(it != scenario.points.end());
 
     const TA::Point& previous_timenode_point = *it;
