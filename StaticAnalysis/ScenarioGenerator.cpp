@@ -88,7 +88,7 @@ class Place{
 
 };
 
-auto& createTree(
+static auto& createTree(
         CommandDispatcher<>& disp,
         const iscore::DocumentContext& ctx)
 {
@@ -160,7 +160,7 @@ auto addMessageToState(
     disp.submitCommand(cmd);
 }
 
-auto createConstraint(
+static auto createConstraint(
     CommandDispatcher<>& disp,
     const Scenario::ProcessModel& scenario,
     const Scenario::StateModel& startState,
@@ -213,7 +213,7 @@ void createTrigger(
    disp.submitCommand(set_max_cmd);
 }
 
-auto createPlace(
+static auto createPlace(
     CommandDispatcher<>& disp,
     const Scenario::ProcessModel& scenario,
     const Scenario::StateModel& startState,
@@ -281,7 +281,7 @@ void addConditionTrigger(
     }
 }
 
-auto& createTransition(
+static auto& createTransition(
         CommandDispatcher<>& disp,
         const Scenario::ProcessModel& scenario,
         const Scenario::StateModel& startState,
@@ -304,7 +304,7 @@ auto& createTransition(
 }
 
 
-QList<QString> JsonArrayToStringList(
+static QList<QString> JsonArrayToStringList(
         QJsonArray list)
 {
     QList<QString> output;
@@ -314,7 +314,7 @@ QList<QString> JsonArrayToStringList(
     return output;
 }
 
-QJsonObject loadJsonFile(){
+static QJsonObject loadJsonFile(){
     // search the file
     QString filename = QFileDialog::getOpenFileName(NULL,
                                                     "Open Petri Net File",
