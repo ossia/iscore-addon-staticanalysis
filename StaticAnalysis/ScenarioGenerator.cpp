@@ -150,8 +150,8 @@ auto addMessageToState(
                 state,
                 { // A list
                     { // Of messages
-                      { // The address
-                          {device, {address}}
+                      State::AddressAccessor{ // The address
+                        {device, {address}}
                       },
                       State::Value::fromValue(value) // the value
                   }
