@@ -26,7 +26,7 @@
 #include <iscore/document/DocumentInterface.hpp>
 #include <iscore/plugins/application/GUIApplicationContextPlugin.hpp>
 #include <iscore/tools/SettableIdentifier.hpp>
-#include <iscore/tools/std/Algorithms.hpp>
+#include <ossia/detail/algorithms.hpp>
 #include <iscore/menu/MenuInterface.hpp>
 #include <core/document/Document.hpp>
 
