@@ -40,6 +40,7 @@
 #include <StaticAnalysis/ScenarioMetrics.hpp>
 #include <StaticAnalysis/ScenarioGenerator.hpp>
 #include <StaticAnalysis/TIKZConversion.hpp>
+#include <iscore/actions/ActionManager.hpp>
 
 stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& app):
     iscore::GUIApplicationContextPlugin{app}
