@@ -95,8 +95,8 @@ static auto& createTree(
     // Create a tree
     // Get necessary objects : OSC device factory, root node, etc.
     auto settings_factory = ctx.app.components
-            .factory<Device::ProtocolFactoryList>()
-            .get(Engine::Network::OSCProtocolFactory::static_concreteFactoryKey());
+            .interfaces<Device::ProtocolFactoryList>()
+            .get(Engine::Network::OSCProtocolFactory::static_concreteKey());
 
     auto& tree = ctx.plugin<Explorer::DeviceDocumentPlugin>();
 
@@ -233,7 +233,7 @@ static auto createPlace(
   auto& new_constraint = scenario.constraint(state_place_cmd->createdConstraint());
   auto create_loop_cmd = new CreateProcess(
               new_constraint,
-              Metadata<ConcreteFactoryKey_k, Loop::ProcessModel>::get());
+              Metadata<ConcreteKey_k, Loop::ProcessModel>::get());
   disp.submitCommand(create_loop_cmd);
 
   // Create loop pattern
@@ -245,7 +245,7 @@ static auto createPlace(
 
   auto create_scenario_cmd = new CreateProcess(
               pattern,
-              Metadata<ConcreteFactoryKey_k, Scenario::ProcessModel>::get());
+              Metadata<ConcreteKey_k, Scenario::ProcessModel>::get());
   disp.submitCommand(create_scenario_cmd);
 
   auto& scenario_pattern = static_cast<Scenario::ProcessModel&>(pattern.processes.at(create_scenario_cmd->processId()));
