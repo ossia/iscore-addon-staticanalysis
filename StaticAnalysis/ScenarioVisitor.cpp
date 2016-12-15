@@ -7,7 +7,7 @@
 #include <Scenario/Document/TimeNode/Trigger/TriggerModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 
-#include <iscore/menu/MenuInterface.hpp>
+#include <iscore/actions/MenuManager.hpp>
 #include <QAction>
 #include <QChar>
 #include <QDebug>
@@ -25,9 +25,9 @@
 
 #include <iscore/document/DocumentInterface.hpp>
 #include <iscore/plugins/application/GUIApplicationContextPlugin.hpp>
-#include <iscore/tools/SettableIdentifier.hpp>
+#include <iscore/model/Identifier.hpp>
 #include <ossia/detail/algorithms.hpp>
-#include <iscore/menu/MenuInterface.hpp>
+#include <iscore/actions/Menu.hpp>
 #include <core/document/Document.hpp>
 
 #include <QApplication>

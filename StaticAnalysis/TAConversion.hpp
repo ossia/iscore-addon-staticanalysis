@@ -2,7 +2,7 @@
 #include <QString>
 #include <sstream>
 #include <Process/TimeValue.hpp>
-#include <iscore/tools/ModelPath.hpp>
+#include <iscore/model/path/Path.hpp>
 #include <set>
 #include <eggs/variant.hpp>
 

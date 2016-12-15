@@ -601,29 +601,24 @@ void TAVisitor::visit(const Scenario::StateModel &state)
 void TAVisitor::visit(const Scenario::ProcessModel &s)
 {
     using namespace Scenario;
-    const auto& eev = s.endEvent();
-    const auto& eev_id = eev.id();
-    const auto& etn_id = eev.timeNode();
     for(const TimeNodeModel& timenode : s.timeNodes)
     {
-        if(timenode.id() != etn_id)
-            visit(timenode);
+      visit(timenode);
     }
 
     for(const EventModel& event : s.events)
     {
-        if(event.id() != eev_id)
-            visit(event);
+      visit(event);
     }
 
     for(const StateModel& state : s.states)
     {
-        visit(state);
+      visit(state);
     }
 
     for(const ConstraintModel& constraint : s.constraints)
     {
-        visit(constraint);
+      visit(constraint);
     }
 }
 

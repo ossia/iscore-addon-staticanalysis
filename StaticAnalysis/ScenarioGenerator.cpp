@@ -7,7 +7,7 @@
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
-#include <iscore/tools/ModelPathSerialization.hpp>
+#include <iscore/model/path/PathSerialization.hpp>
 #include <Loop/LoopProcessModel.hpp>
 
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
@@ -462,10 +462,7 @@ void generateScenario(
             case 1:
             {
                 EventModel& event = *selector(scenar.events.get());
-                if(&event != &scenar.endEvent())
-                {
-                    disp.submitCommand(new Command::CreateState(scenar, event.id(), y));
-                }
+                disp.submitCommand(new Command::CreateState(scenar, event.id(), y));
 
                 break;
             }
