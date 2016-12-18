@@ -24,14 +24,11 @@ class iscore_addon_staticanalysis final:
                 iscore::GUIApplicationContextPlugin_QtInterface
                 )
 
+  ISCORE_PLUGIN_METADATA(1, "e1ef22f4-5fa3-4992-9f88-0e1ec5b5bb7f")
     public:
         iscore_addon_staticanalysis();
         virtual ~iscore_addon_staticanalysis() = default;
 
         iscore::GUIApplicationContextPlugin* make_applicationPlugin(
                 const iscore::GUIApplicationContext& app) override;
-
-        iscore::Version version() const override;
-        UuidKey<iscore::Plugin> key() const override;
-
 };
