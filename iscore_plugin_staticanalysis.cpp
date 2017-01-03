@@ -10,7 +10,7 @@ iscore_addon_staticanalysis::iscore_addon_staticanalysis() :
 {
 }
 
-iscore::GUIApplicationContextPlugin* iscore_addon_staticanalysis::make_applicationPlugin(
+iscore::GUIApplicationPlugin* iscore_addon_staticanalysis::make_applicationPlugin(
         const iscore::GUIApplicationContext& app)
 {
     return new stal::ApplicationPlugin{app};

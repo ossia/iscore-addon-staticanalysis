@@ -24,7 +24,7 @@
 #include <State/Value.hpp>
 
 #include <iscore/document/DocumentInterface.hpp>
-#include <iscore/plugins/application/GUIApplicationContextPlugin.hpp>
+#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
 #include <iscore/model/Identifier.hpp>
 #include <ossia/detail/algorithms.hpp>
 #include <iscore/actions/Menu.hpp>
@@ -43,7 +43,7 @@
 #include <iscore/actions/ActionManager.hpp>
 
 stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& app):
-    iscore::GUIApplicationContextPlugin{app}
+    iscore::GUIApplicationPlugin{app}
 {
     m_himito = new QAction{tr("Generate scenario from Petri Net"), nullptr};
     connect(m_himito, &QAction::triggered, [&] () {
