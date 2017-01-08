@@ -193,7 +193,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
                 QSaveFile f{savename};
                 f.open(QIODevice::WriteOnly);
 
-                QString tex = makeTIKZ(name, baseScenario);
+                QString tex = makeTIKZ2(name, baseScenario);
                 f.write(tex.toUtf8());
                 f.commit();
             }
