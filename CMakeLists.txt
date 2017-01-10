@@ -20,6 +20,7 @@ set(SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioVisitor.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioGenerator.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TAConversion.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TIKZConversion.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/iscore_plugin_staticanalysis.cpp"
 )
 
