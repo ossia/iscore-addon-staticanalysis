@@ -172,13 +172,14 @@ QString makeTIKZ2(QString name, Scenario::ProcessModel& scenario)
       if(minNull)
       {
         texString += draw_dash % point(x0 * width, y * height) % " -- " % point(xMax * width, y * height) % endname(cst);
+        texString += draw_arc % point(xMax * width - 0.15, y * height - 0.15) % cstMax % endname(cst);
       }
       else
       {
         texString += draw_full % point(x0 * width, y * height) % " -- " % point(xMin * width, y * height) % endname(cst);
         texString += draw_dash % point(xMin * width, y * height) % " -- " % point(xMax * width, y * height) % endname(cst);
         texString += draw_arc % point(xMin * width + 0.24, y * height + 0.153) % cstMin % endname(cst);
-        texString += draw_arc % point(xMax * width - 0.19, y * height - 0.15) % cstMax % endname(cst);
+        texString += draw_arc % point(xMax * width - 0.15, y * height - 0.15) % cstMax % endname(cst);
       }
     }
 
