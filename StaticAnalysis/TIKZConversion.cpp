@@ -205,8 +205,8 @@ struct TIKZVisitor
     const auto y = 1. - cst.heightPercentage();
 
     const QPointF tikz_origin{r.x() + x0 * r.width(), -r.y() + y * r.height()};
-    const QPointF tikz_min{r.x() + xDef * r.width(),  -r.y() + y * r.height()};
-    const QPointF tikz_default{r.x() + xMin * r.width(),  -r.y() + y * r.height()};
+    const QPointF tikz_default{r.x() + xDef * r.width(),  -r.y() + y * r.height()};
+    const QPointF tikz_min{r.x() + xMin * r.width(),  -r.y() + y * r.height()};
     const QPointF tikz_max{r.x() + xMax * r.width(),  -r.y() + y * r.height()};
     const QPointF tikz_minArc{r.x() + xMin * r.width() + 0.24, -r.y() + y * r.height() + 0.153};
     const QPointF tikz_maxArc{r.x() + xMax * r.width() - 0.15, -r.y() + y * r.height() - 0.15};
@@ -278,8 +278,11 @@ struct TIKZVisitor
       }
       else if(auto scenar = dynamic_cast<Scenario::ProcessModel*>(&process))
       {
-
-        makelabel(proc_rect.center().x, proc_rect.center().y(), scenar->metadata().getName());
+        tikz += makelabel(
+              proc_rect.center().x(),
+               proc_rect.y() - proc_rect.height() / 2.,
+              scenar->metadata().getName())
+            % endname(*scenar);
       }
     }
   }
