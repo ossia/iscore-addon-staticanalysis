@@ -258,7 +258,7 @@ struct TIKZVisitor
     int pos = 0;
     QRectF proc_rect = r;
     proc_rect.setX(tikz_origin.x());
-    proc_rect.setY(tikz_origin.y() - 0.2);
+    proc_rect.setY(tikz_origin.y() - 0.1);
     proc_rect.setWidth(tikz_default.x() - tikz_origin.x());
     proc_rect.setHeight(1);
 
