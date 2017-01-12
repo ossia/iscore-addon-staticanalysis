@@ -169,6 +169,15 @@ struct TIKZVisitor
     tikz += fill
             % point(r.x() + x * r.width(), -r.y() + y * r.height())
             % circle % num(0.075) % endname(state);
+
+    const auto& label = state.metadata().getLabel();
+    if(!label.isEmpty())
+    {
+      tikz += makelabel(
+                 r.x() + x * r.width() + 0.15,
+                -r.y() + (1. - y) * r.height() + 0.25,
+                label) % endname(state);
+    }
   }
 
   void operator()(const Scenario::TimeNodeModel& node, QRectF r)
