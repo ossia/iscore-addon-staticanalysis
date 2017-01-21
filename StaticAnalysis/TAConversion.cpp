@@ -296,20 +296,20 @@ QString makeScenario(const Scenario::ConstraintModel &c)
         "MainStartEvent",
         IntVariable{"msg_start"},
         BroadcastVariable{"global_start"},
-        TimeValue::zero(),
+        TimeVal::zero(),
         1};
     TA::Event scenario_end_event{
         "MainEndEvent",
         IntVariable{"msg_end"},
         BroadcastVariable{"global_end"},
-        TimeValue::fromMsecs(18000),
+        TimeVal::fromMsecs(18000),
                 1};
 
     QString cst_name = name(c);
 
     // Setup of the rigid
     TA::Flexible base{cst_name};
-    base.dmin = TimeValue::zero();
+    base.dmin = TimeVal::zero();
     base.dmax = c.duration.maxDuration();
     base.finite = false;
 

@@ -52,7 +52,7 @@ using BoolVariable = QString;
 using IntVariable = QString;
 struct Event
 {
-    Event(QString n, IntVariable a, BroadcastVariable b, TimeValue c, int d):
+    Event(QString n, IntVariable a, BroadcastVariable b, TimeVal c, int d):
         name{n},
         message{a},
         event{b},
@@ -65,13 +65,13 @@ struct Event
     QString name;
     IntVariable message{};
     BroadcastVariable event{};
-    TimeValue date{};
+    TimeVal date{};
     int val{};
 };
 
 struct Event_ND
 {
-    Event_ND(QString n, IntVariable a, BroadcastVariable b, TimeValue c, int d):
+    Event_ND(QString n, IntVariable a, BroadcastVariable b, TimeVal c, int d):
         name{n},
         message{a},
         event{b},
@@ -84,7 +84,7 @@ struct Event_ND
     QString name;
     IntVariable message{};
     BroadcastVariable event{};
-    TimeValue date{};
+    TimeVal date{};
     int val{};
 };
 
@@ -184,8 +184,8 @@ struct Flexible
 
     QString name;
 
-    TimeValue dmin;
-    TimeValue dmax;
+    TimeVal dmin;
+    TimeVal dmax;
     bool finite = true;
 
     BroadcastVariable event_s;
@@ -211,7 +211,7 @@ struct Rigid
 
     QString name;
 
-    TimeValue dur;
+    TimeVal dur;
 
     BroadcastVariable event_s;
     BroadcastVariable event_e1;

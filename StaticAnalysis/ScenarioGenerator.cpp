@@ -180,7 +180,7 @@ static auto createConstraint(
   auto state_command = new CreateConstraint_State_Event_TimeNode(
               scenario,                   // scenario
               new_state.id(),             // start state id
-              Scenario::parentEvent(new_state, scenario).date() + TimeValue::fromMsecs(duration), // duration
+              Scenario::parentEvent(new_state, scenario).date() + TimeVal::fromMsecs(duration), // duration
               posY);                       // y-pos in %
   disp.submitCommand(state_command);
 
@@ -192,8 +192,8 @@ void createTrigger(
         CommandDispatcher<>& disp,
         const Scenario_T& scenario,
         const Scenario::StateModel& state,
-        const TimeValue& min_duration,
-        const TimeValue& max_duration
+        const TimeVal& min_duration,
+        const TimeVal& max_duration
         )
 {
   using namespace Scenario;
@@ -226,7 +226,7 @@ static auto createPlace(
   // Create constraint
   auto state_place_cmd = createConstraint(disp, scenario, startState, 12000, posY);
   auto& loop_state = scenario.state(state_place_cmd->createdState());
-  createTrigger(disp, scenario, loop_state, TimeValue::zero(), TimeValue::infinite());
+  createTrigger(disp, scenario, loop_state, TimeVal::zero(), TimeVal::infinite());
 
   // Create the loop
   using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoRacks>>;
@@ -241,7 +241,7 @@ static auto createPlace(
   auto& pattern = loop.constraint();
 
   auto& pattern_state = loop.state(pattern.endState());
-  createTrigger(disp, loop, pattern_state, TimeValue::zero(), TimeValue::infinite());
+  createTrigger(disp, loop, pattern_state, TimeVal::zero(), TimeVal::infinite());
 
   auto create_scenario_cmd = new CreateProcess(
               pattern,
@@ -285,8 +285,8 @@ static auto& createTransition(
         CommandDispatcher<>& disp,
         const Scenario::ProcessModel& scenario,
         const Scenario::StateModel& startState,
-        const TimeValue& min_duration,
-        const TimeValue& max_duration,
+        const TimeVal& min_duration,
+        const TimeVal& max_duration,
         double posY
     )
 {
@@ -358,8 +358,8 @@ void generateScenarioFromPetriNet(
     }
 
     // default durations of transitions
-    TimeValue t_min = TimeValue::fromMsecs(3000);
-    TimeValue t_max = TimeValue::fromMsecs(5000);
+    TimeVal t_min = TimeVal::fromMsecs(3000);
+    TimeVal t_max = TimeVal::fromMsecs(5000);
 
     // initial state of the scenario
     auto& first_state = *states(scenario).begin();
@@ -397,7 +397,7 @@ void generateScenarioFromPetriNet(
           auto& start_state_id = *scenario_place.startEvent().states().begin();
           auto& place_start_state = scenario_place.states.at(start_state_id);
 
-          auto& state_place = createTransition(disp, scenario_place, place_start_state,  TimeValue::zero(), TimeValue::infinite(), 0.4);
+          auto& state_place = createTransition(disp, scenario_place, place_start_state,  TimeVal::zero(), TimeVal::infinite(), 0.4);
 
           // Add pre transitions of the place
           foreach (QString t, p.pre){
@@ -454,7 +454,7 @@ void generateScenario(
                 {
                     const TimeNodeModel& parentNode = parentTimeNode(state, scenar);
                     Id<StateModel> state_id = state.id();
-                    TimeValue t = TimeValue::fromMsecs(rand() % 20000) + parentNode.date();
+                    TimeVal t = TimeVal::fromMsecs(rand() % 20000) + parentNode.date();
                     disp.submitCommand(new Command::CreateConstraint_State_Event_TimeNode(scenar, state_id, t, state.heightPercentage()));
                     break;
                 }
