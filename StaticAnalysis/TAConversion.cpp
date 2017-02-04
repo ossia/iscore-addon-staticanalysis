@@ -12,19 +12,19 @@ namespace stal
 namespace TA
 {
 const int uppaal_division_factor = 100; // used because uppaal numbers don't go over 32768...
-static int to_operator(State::Relation::Comparator op)
+static int to_operator(ossia::expressions::comparator op)
 {
     switch(op)
     {
-        case State::Relation::Equal:
+        case ossia::expressions::comparator::EQUAL:
             return 1;
-        case State::Relation::Lower:
+        case ossia::expressions::comparator::LOWER:
             return 2;
-        case State::Relation::LowerEqual:
+        case ossia::expressions::comparator::LOWER_EQUAL:
             return 3;
-        case State::Relation::Greater:
+        case ossia::expressions::comparator::GREATER:
             return 4;
-        case State::Relation::GreaterEqual:
+        case ossia::expressions::comparator::GREATER_EQUAL:
             return 5;
         default:
             return 0;
