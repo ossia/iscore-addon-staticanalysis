@@ -124,8 +124,8 @@ auto createTreeNode(
     // Create some node
     Device::AddressSettings theNode;
     theNode.name = name;
-    theNode.clipMode = Device::ClipMode::Free;
-    theNode.ioType = Device::IOType::InOut;
+    theNode.clipMode = ossia::bounding_mode::FREE;
+    theNode.ioType = ossia::access_mode::BI;
     theNode.value = State::Value::fromValue(value);
 
     auto create_addr_cmd = new Explorer::Command::AddAddress(
