@@ -339,7 +339,7 @@ struct TIKZVisitor
 QString makeTIKZ2(QString name, Scenario::ProcessModel& scenario)
 {
   TIKZVisitor v;
-  v(scenario, iscore::none);
+  v(scenario, ossia::none);
   return v.tikz;
 }
 

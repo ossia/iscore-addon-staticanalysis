@@ -29,6 +29,6 @@ class iscore_addon_staticanalysis final:
         iscore_addon_staticanalysis();
         virtual ~iscore_addon_staticanalysis() = default;
 
-        iscore::GUIApplicationPlugin* make_applicationPlugin(
+        iscore::GUIApplicationPlugin* make_guiApplicationPlugin(
                 const iscore::GUIApplicationContext& app) override;
 };
