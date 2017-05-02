@@ -229,7 +229,7 @@ static auto createPlace(
   createTrigger(disp, scenario, loop_state, TimeVal::zero(), TimeVal::infinite());
 
   // Create the loop
-  using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoSlots, NotBaseConstraint>>;
+  using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoSlots>>;
   auto& new_constraint = scenario.constraint(state_place_cmd->createdConstraint());
   auto create_loop_cmd = new CreateProcess(
               new_constraint,
