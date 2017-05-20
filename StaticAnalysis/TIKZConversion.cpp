@@ -209,7 +209,7 @@ struct TIKZVisitor
     const auto xMin = x0 + cst.duration.minDuration().msec();
     const auto xMax = x0 + cst.duration.maxDuration().msec();
     const bool rigid = cst.duration.isRigid();
-    const bool minNull = cst.duration.isMinNul();
+    const bool minNull = cst.duration.isMinNull();
     const bool maxInf = cst.duration.isMaxInfinite();
     const auto y = 1. - cst.heightPercentage();
 
