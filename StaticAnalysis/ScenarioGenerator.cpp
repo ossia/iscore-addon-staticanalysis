@@ -456,8 +456,8 @@ void generateScenario(
                     Id<StateModel> state_id = state.id();
                     TimeVal t = TimeVal::fromMsecs(rand() % 20000) + parentNode.date();
                     disp.submitCommand(new Command::CreateConstraint_State_Event_TimeNode(scenar, state_id, t, state.heightPercentage()));
-                    break;
                 }
+                break;
             }
             case 1:
             {
