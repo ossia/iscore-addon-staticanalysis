@@ -232,6 +232,7 @@ static auto createPlace(
   using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoSlots>>;
   auto& new_constraint = scenario.constraint(state_place_cmd->createdConstraint());
   auto create_loop_cmd = new CreateProcess(
+              disp.stack().context().app,
               new_constraint,
               Metadata<ConcreteKey_k, Loop::ProcessModel>::get());
   disp.submitCommand(create_loop_cmd);
@@ -243,7 +244,7 @@ static auto createPlace(
   auto& pattern_state = loop.state(pattern.endState());
   createTrigger(disp, loop, pattern_state, TimeVal::zero(), TimeVal::infinite());
 
-  auto create_scenario_cmd = new CreateProcess(
+  auto create_scenario_cmd = new CreateProcess(disp.stack().context().app,
               pattern,
               Metadata<ConcreteKey_k, Scenario::ProcessModel>::get());
   disp.submitCommand(create_scenario_cmd);
