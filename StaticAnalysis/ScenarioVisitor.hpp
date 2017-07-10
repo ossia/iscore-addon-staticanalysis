@@ -24,6 +24,7 @@ class ApplicationPlugin :
         QAction* m_convert{};
         QAction* m_metrics{};
         QAction* m_TIKZexport{};
+        QAction* m_statistics{};
 
 };
 }

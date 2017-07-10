@@ -1,3 +1,5 @@
+
+
 #include <Scenario/Document/BaseScenario/BaseScenario.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
@@ -40,6 +42,7 @@
 #include <StaticAnalysis/ScenarioMetrics.hpp>
 #include <StaticAnalysis/ScenarioGenerator.hpp>
 #include <StaticAnalysis/TIKZConversion.hpp>
+#include <StaticAnalysis/Statistics.hpp>
 #include <iscore/actions/ActionManager.hpp>
 
 stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& app):
@@ -200,6 +203,51 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         }
 
     });
+
+    m_statistics = new QAction{tr("Statistics"), nullptr};
+    connect(m_statistics, &QAction::triggered, [&] () {
+      auto doc = currentDocument();
+      ExplorerStatistics e{doc->context().plugin<Explorer::DeviceDocumentPlugin>()};
+
+      QString str;
+      str += "Devices\n=======\n\n";
+      for(const DeviceStatistics& dev : e.devices)
+      {
+        str += "Device: " + dev.name + "\n";
+        str += "Nodes    :\t" + QString::number(dev.nodes) + "\n";
+        str += "NonLeaf  :\t" + QString::number(dev.non_leaf_nodes) + "\n";
+        str += "MaxDepth :\t" + QString::number(dev.max_depth) + "\n";
+        str += "MaxCld   :\t" + QString::number(dev.max_child_count) + "\n";
+        str += "AvgCld   :\t" + QString::number(dev.avg_child_count) + "\n";
+        str += "AvgNLCld :\t" + QString::number(dev.avg_non_leaf_child_count) + "\n";
+        str += "\n";
+
+        str += "Empty    :\t" + QString::number(dev.containers) + "\n";
+        str += "Int      :\t" + QString::number(dev.int_addr) + "\n";
+        str += "Impulse  :\t" + QString::number(dev.impulse_addr) + "\n";
+        str += "Float    :\t" + QString::number(dev.float_addr) + "\n";
+        str += "Bool     :\t" + QString::number(dev.bool_addr) + "\n";
+        str += "Vec2F    :\t" + QString::number(dev.vec2f_addr) + "\n";
+        str += "Vec3F    :\t" + QString::number(dev.vec3f_addr) + "\n";
+        str += "Vec4F    :\t" + QString::number(dev.vec4f_addr) + "\n";
+        str += "Tuple    :\t" + QString::number(dev.tuple_addr) + "\n";
+        str += "String   :\t" + QString::number(dev.string_addr) + "\n";
+        str += "Char     :\t" + QString::number(dev.char_addr) + "\n";
+        str += "\n";
+
+        str += "Get      :\t" + QString::number(dev.num_get) + "\n";
+        str += "Set      :\t" + QString::number(dev.num_set) + "\n";
+        str += "Bi       :\t" + QString::number(dev.num_bi) + "\n";
+        str += "\n";
+
+        str += "AMetadata:\t" + QString::number(dev.avg_ext_metadata) + "\n";
+        str += "\n\n";
+      }
+
+      Scenario::TextDialog dial(str, qApp->activeWindow());
+      dial.exec();
+    });
+
 }
 
 iscore::GUIElements stal::ApplicationPlugin::makeGUIElements()
@@ -211,6 +259,7 @@ iscore::GUIElements stal::ApplicationPlugin::makeGUIElements()
     menu->addAction(m_convert);
     menu->addAction(m_metrics);
     menu->addAction(m_TIKZexport);
+    menu->addAction(m_statistics);
 
     return {};
 }

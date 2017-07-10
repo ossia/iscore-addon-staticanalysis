@@ -40,7 +40,7 @@ static void set_point_condition(Point& point, const State::Expression& e)
         if(rel.is<State::Relation>())
         {
             const State::Relation& r = rel.get<State::Relation>();
-            auto val_ptr = r.rhs.target<State::Value>();
+            auto val_ptr = r.rhs.target<ossia::value>();
             if(val_ptr)
             {
                 point.condition = to_operator(r.op);

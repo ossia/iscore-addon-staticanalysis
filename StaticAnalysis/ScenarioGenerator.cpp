@@ -126,7 +126,7 @@ auto createTreeNode(
     theNode.name = name;
     theNode.clipMode = ossia::bounding_mode::FREE;
     theNode.ioType = ossia::access_mode::BI;
-    theNode.value = State::Value::fromValue(value);
+    theNode.value = value;
 
     auto create_addr_cmd = new Explorer::Command::AddAddress(
                 tree,
@@ -153,7 +153,7 @@ auto addMessageToState(
                       State::AddressAccessor{ // The address
                         {device, {address}}
                       },
-                      State::Value::fromValue(value) // the value
+                      value // the value
                   }
                 });
 
