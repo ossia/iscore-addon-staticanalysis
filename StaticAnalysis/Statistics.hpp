@@ -34,8 +34,8 @@ struct DeviceStatistics
     int non_leaf_nodes{};
     int max_depth{};
     int max_child_count{}; // not recursive, for a single node
-    int avg_child_count{};
-    int avg_non_leaf_child_count{}; // for nodes that have > 0 children
+    double avg_child_count{};
+    double avg_non_leaf_child_count{}; // for nodes that have > 0 children
 
     int containers{};
     int int_addr{};
@@ -53,7 +53,7 @@ struct DeviceStatistics
     int num_set{};
     int num_bi{};
 
-    int avg_ext_metadata{};
+    double avg_ext_metadata{};
 
 
 
