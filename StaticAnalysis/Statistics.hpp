@@ -55,6 +55,14 @@ struct DeviceStatistics
 
     double avg_ext_metadata{};
 
+    int max_tuple_size{};
+    double avg_tuple_size{};
+    int float1_tuples{};
+    int float2_tuples{};
+    int float3_tuples{};
+    int float4_tuples{};
+    int floatN_tuples{};
+
 
 
     int cur_depth{};
@@ -104,7 +112,27 @@ struct DeviceStatistics
                     case ossia::val_type::VEC2F: vec2f_addr++; break;
                     case ossia::val_type::VEC3F: vec3f_addr++; break;
                     case ossia::val_type::VEC4F: vec4f_addr++; break;
-                    case ossia::val_type::TUPLE: tuple_addr++; break;
+                    case ossia::val_type::TUPLE:
+                        {
+                            auto& tpl = addr.value.get<std::vector<ossia::value>>();
+                            if(tpl.size() > max_tuple_size)
+                                max_tuple_size = tpl.size();
+                            avg_tuple_size += tpl.size();
+                            if(ossia::all_of(tpl, [] (const auto& v) { return v.getType() == ossia::val_type::FLOAT; }))
+                            {
+                                switch(tpl.size())
+                                {
+                                    case 1: float1_tuples++; break;
+                                    case 2: float2_tuples++; break;
+                                    case 3: float3_tuples++; break;
+                                    case 4: float4_tuples++; break;
+                                    default: floatN_tuples++; break;
+                                }
+                            }
+
+                            tuple_addr++;
+                            break;
+                        }
                     case ossia::val_type::CHAR: char_addr++; break;
                     case ossia::val_type::STRING: string_addr++; break;
                     }
@@ -134,6 +162,7 @@ struct DeviceStatistics
         avg_child_count /= nodes;
         avg_non_leaf_child_count /= non_leaf_nodes;
         avg_ext_metadata /= nodes;
+        avg_tuple_size /= tuple_addr;
     }
 };
 
