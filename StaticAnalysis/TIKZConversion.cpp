@@ -1,7 +1,7 @@
 #include "TIKZConversion.hpp"
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
-#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <State/Expression.hpp>
 
@@ -19,7 +19,7 @@ QString makeTIKZ(QString name, Scenario::ProcessModel& scenario)
   texString += "\\def\\schemaScenario " + name + "{%\n";
   texString += "\\begin{tikzpicture}[scale=0.3]%\n";
 
-  for(auto &node : scenario.timeNodes)
+  for(auto &node : scenario.timeSyncs)
   {
 
     int date = (int) node.date().sec();
@@ -37,7 +37,7 @@ QString makeTIKZ(QString name, Scenario::ProcessModel& scenario)
   for(auto &constraint : scenario.constraints)
   {
     QString constraintName = "C"+QString::number(constraint.id_val());
-    auto& endTn = Scenario::endTimeNode(constraint, scenario);
+    auto& endTn = Scenario::endTimeSync(constraint, scenario);
 
     auto yPos = -constraint.heightPercentage() * HEIGHT;
     auto date = (int) constraint.startDate().sec();
@@ -122,7 +122,7 @@ struct TIKZVisitor
       if(h < min_y) min_y = h;
       if(h > max_y) max_y = h;
 
-      auto& tn = Scenario::parentTimeNode(state, scenario);
+      auto& tn = Scenario::parentTimeSync(state, scenario);
       const auto t = tn.date().msec();
       if(t > max_x)
         max_x = t;
@@ -145,7 +145,7 @@ struct TIKZVisitor
       (*this)(state, scenario, r);
     }
 
-    for(const TimeNodeModel& node : scenario.timeNodes)
+    for(const TimeSyncModel& node : scenario.timeSyncs)
     {
       (*this)(node, r);
     }
@@ -163,7 +163,7 @@ struct TIKZVisitor
 
   void operator()(const Scenario::StateModel& state, const Scenario::ProcessModel& scenario, QRectF r)
   {
-    auto& tn = Scenario::parentTimeNode(state, scenario);
+    auto& tn = Scenario::parentTimeSync(state, scenario);
     const auto x = tn.date().msec();
     const auto y = 1. - state.heightPercentage();
     tikz += fill
@@ -180,7 +180,7 @@ struct TIKZVisitor
     }
   }
 
-  void operator()(const Scenario::TimeNodeModel& node, QRectF r)
+  void operator()(const Scenario::TimeSyncModel& node, QRectF r)
   {
     const auto x = node.date().msec();
     const auto y = node.extent();
@@ -316,7 +316,7 @@ struct TIKZVisitor
     if(!State::isTrueExpression(ev.condition().toString()))
     {
       auto y = ev.extent();
-      auto x = parentTimeNode(ev, scenario).date().msec();
+      auto x = parentTimeSync(ev, scenario).date().msec();
 
       double ev_x = r.x() + x * r.width() - 0.2;
       double ev_top = -r.y() + (1. - y.top()) * r.height();

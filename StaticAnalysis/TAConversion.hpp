@@ -6,7 +6,7 @@
 #include <set>
 #include <eggs/variant.hpp>
 
-#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <Scenario/Document/State/StateModel.hpp>
@@ -14,7 +14,7 @@
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
 namespace Scenario
 {
-class TimeNodeModel;
+class TimeSyncModel;
 class EventModel;
 class ConstraintModel;
 class StateModel;
@@ -40,7 +40,7 @@ QString name(const Object& obj)
             elt = ObjectIdentifier{"E", elt.id()};
         else if(elt.objectName().contains("Constraint"))
             elt = ObjectIdentifier{"C", elt.id()};
-        else if(elt.objectName() == Metadata<ObjectKey_k, Scenario::TimeNodeModel>::get())
+        else if(elt.objectName() == Metadata<ObjectKey_k, Scenario::TimeSyncModel>::get())
             elt = ObjectIdentifier{"T", elt.id()};
     }
 
@@ -283,7 +283,7 @@ private:
     const char* space() const;
 
     void visit(
-            const Scenario::TimeNodeModel& timenode);
+            const Scenario::TimeSyncModel& timenode);
     void visit(
             const Scenario::EventModel& event);
     void visit(

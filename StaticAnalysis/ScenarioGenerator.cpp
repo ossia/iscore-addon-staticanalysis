@@ -1,12 +1,12 @@
 #include "ScenarioGenerator.hpp"
 #include <Scenario/Commands/Scenario/Creations/CreateState.hpp>
-#include <Scenario/Commands/Scenario/Creations/CreateConstraint_State_Event_TimeNode.hpp>
+#include <Scenario/Commands/Scenario/Creations/CreateConstraint_State_Event_TimeSync.hpp>
 #include <Scenario/Commands/Scenario/Creations/CreateEvent_State.hpp>
 #include <Scenario/Commands/Scenario/Creations/CreateConstraint.hpp>
-#include <Scenario/Commands/TimeNode/AddTrigger.hpp>
+#include <Scenario/Commands/TimeSync/AddTrigger.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
-#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <iscore/model/path/PathSerialization.hpp>
 #include <Loop/LoopProcessModel.hpp>
 
@@ -22,7 +22,7 @@
 
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Scenario/Process/Algorithms/ContainersAccessors.hpp>
-#include <Scenario/Commands/TimeNode/SetTrigger.hpp>
+#include <Scenario/Commands/TimeSync/SetTrigger.hpp>
 #include <Explorer/Commands/Add/AddDevice.hpp>
 #include <Explorer/Commands/Add/AddAddress.hpp>
 #include <Engine/Protocols/OSC/OSCSpecificSettings.hpp>
@@ -177,7 +177,7 @@ static auto createConstraint(
   disp.submitCommand(new_state_cmd);
   auto& new_state = scenario.state(new_state_cmd->createdState());
 
-  auto state_command = new CreateConstraint_State_Event_TimeNode(
+  auto state_command = new CreateConstraint_State_Event_TimeSync(
               scenario,                   // scenario
               new_state.id(),             // start state id
               Scenario::parentEvent(new_state, scenario).date() + TimeVal::fromMsecs(duration), // duration
@@ -200,7 +200,7 @@ void createTrigger(
   using namespace Scenario::Command;
 
   // Create the trigger point
-  auto& timenode = parentTimeNode(state, scenario);
+  auto& timenode = parentTimeSync(state, scenario);
   auto trigger_command = new AddTrigger<Scenario_T>(timenode);
   disp.submitCommand(trigger_command);
 
@@ -229,10 +229,8 @@ static auto createPlace(
   createTrigger(disp, scenario, loop_state, TimeVal::zero(), TimeVal::infinite());
 
   // Create the loop
-  using CreateProcess = AddProcessToConstraint<AddProcessDelegate<HasNoSlots>>;
   auto& new_constraint = scenario.constraint(state_place_cmd->createdConstraint());
-  auto create_loop_cmd = new CreateProcess(
-              disp.stack().context().app,
+  auto create_loop_cmd = new AddProcessToConstraint(
               new_constraint,
               Metadata<ConcreteKey_k, Loop::ProcessModel>::get());
   disp.submitCommand(create_loop_cmd);
@@ -244,7 +242,7 @@ static auto createPlace(
   auto& pattern_state = loop.state(pattern.endState());
   createTrigger(disp, loop, pattern_state, TimeVal::zero(), TimeVal::infinite());
 
-  auto create_scenario_cmd = new CreateProcess(disp.stack().context().app,
+  auto create_scenario_cmd = new AddProcessToConstraint(
               pattern,
               Metadata<ConcreteKey_k, Scenario::ProcessModel>::get());
   disp.submitCommand(create_scenario_cmd);
@@ -276,7 +274,7 @@ void addConditionTrigger(
     if(maybe_parsed_expression)
     {
         // 4. Set the expression to the trigger
-        auto& timenode = parentTimeNode(state, scenario);
+        auto& timenode = parentTimeSync(state, scenario);
         auto expr_command = new SetTrigger(timenode, *maybe_parsed_expression);
         disp.submitCommand(expr_command);
     }
@@ -453,10 +451,10 @@ void generateScenario(
                 StateModel& state = *selector(scenar.states.get());
                 if(!state.nextConstraint())
                 {
-                    const TimeNodeModel& parentNode = parentTimeNode(state, scenar);
+                    const TimeSyncModel& parentNode = parentTimeSync(state, scenar);
                     Id<StateModel> state_id = state.id();
                     TimeVal t = TimeVal::fromMsecs(rand() % 20000) + parentNode.date();
-                    disp.submitCommand(new Command::CreateConstraint_State_Event_TimeNode(scenar, state_id, t, state.heightPercentage()));
+                    disp.submitCommand(new Command::CreateConstraint_State_Event_TimeSync(scenar, state_id, t, state.heightPercentage()));
                 }
                 break;
             }
@@ -475,9 +473,9 @@ void generateScenario(
     {
         StateModel& state1 = *selector(scenar.states.get());
         StateModel& state2 = *selector(scenar.states.get());
-        auto& tn1 = Scenario::parentTimeNode(state1, scenar);
+        auto& tn1 = Scenario::parentTimeSync(state1, scenar);
         auto t1 = tn1.date();
-        auto& tn2 = Scenario::parentTimeNode(state2, scenar);
+        auto& tn2 = Scenario::parentTimeSync(state2, scenar);
         auto t2 = tn2.date();
         if(t1 < t2)
         {
@@ -493,7 +491,7 @@ void generateScenario(
     for(auto i = 0; i < N/5; i++)
     {
         StateModel& state1 = *selector(scenar.states.get());
-        auto& tn1 = Scenario::parentTimeNode(state1, scenar);
+        auto& tn1 = Scenario::parentTimeSync(state1, scenar);
 
         if(tn1.active())
             continue;

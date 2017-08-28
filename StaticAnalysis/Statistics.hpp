@@ -112,7 +112,7 @@ struct DeviceStatistics
                     case ossia::val_type::VEC2F: vec2f_addr++; break;
                     case ossia::val_type::VEC3F: vec3f_addr++; break;
                     case ossia::val_type::VEC4F: vec4f_addr++; break;
-                    case ossia::val_type::TUPLE:
+                    case ossia::val_type::LIST:
                         {
                             auto& tpl = addr.value.get<std::vector<ossia::value>>();
                             if(tpl.size() > max_tuple_size)

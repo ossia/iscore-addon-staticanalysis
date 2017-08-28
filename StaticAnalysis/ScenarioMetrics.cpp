@@ -3,7 +3,7 @@
 #include <Scenario/Document/Constraint/ConstraintModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/State/StateModel.hpp>
-#include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <ossia/detail/algorithms.hpp>
 namespace stal
@@ -13,7 +13,7 @@ class LanguageVisitor;
 
 /*
     // How to count "default" values ?
-    // Operateurs : association processus - contrainte et état - contrainte et état-evenement et état - timenode
+    // Operateurs : association processus - contrainte et état - contrainte et état-evenement et état - timeSync
 
     /// Quand. On créé une contrainte dans le vide : auto-completion d'etats de fin
 
@@ -22,7 +22,7 @@ class LanguageVisitor;
 
     // Faire parallèle entre data flow et time flow ? dans data flow, cable est un opérateur
 
-    // Opérateurs:  after, of, duration, expression, {}, [;], constraint, state, event, timenode, scenario, loop, automation
+    // Opérateurs:  after, of, duration, expression, {}, [;], constraint, state, event, timeSync, scenario, loop, automation
     // ex.
     //
     // constraint c1 after s0
@@ -37,7 +37,7 @@ class LanguageVisitor;
     // event e1 of t1
     // state s0 of e0
     // event e0 of t0
-    // timenode t0
+    // timeSync t0
     // expression {(tze < 123)} of e0
     // scenario sx of c1
     */
@@ -64,7 +64,7 @@ class LanguageVisitor<Scenario::ProcessModel>
                 visit(elt);
             }
 
-            for(const auto& elt : scenar.timeNodes)
+            for(const auto& elt : scenar.timeSyncs)
             {
                 visit(elt);
             }
@@ -131,7 +131,7 @@ class LanguageVisitor<Scenario::ProcessModel>
         void visit(const Scenario::EventModel& e)
         {
             text += "event " + id(e)
-                    + " of " + id(parentTimeNode(e, m_scenar))
+                    + " of " + id(parentTimeSync(e, m_scenar))
                     + QString("\n");
 
 
@@ -143,9 +143,9 @@ class LanguageVisitor<Scenario::ProcessModel>
             }
         }
 
-        void visit(const Scenario::TimeNodeModel& tn)
+        void visit(const Scenario::TimeSyncModel& tn)
         {
-            text += "timenode " + id(tn)
+            text += "timeSync " + id(tn)
                     + QString("\n");
 
             if(tn.expression().childCount() > 0)
@@ -180,7 +180,7 @@ struct ScenarioFactors
                 int constraint{};
                 int event{};
                 int state{};
-                int timenode{};
+                int timeSync{};
 
                 int of{};
                 int after{};
@@ -192,7 +192,7 @@ struct ScenarioFactors
 
                 std::vector<int> toVector() const
                 {
-                    return {scenario, constraint, event, state, timenode, of, after, lbrace, rbrace, expression, duration};
+                    return {scenario, constraint, event, state, timeSync, of, after, lbrace, rbrace, expression, duration};
                 }
 
         } operators;
@@ -239,7 +239,7 @@ struct ScenarioFactors
             operators.constraint += other.operators.constraint;
             operators.event += other.operators.event;
             operators.state += other.operators.state;
-            operators.timenode += other.operators.timenode;
+            operators.timeSync += other.operators.timeSync;
 
             operators.of += other.operators.of;
             operators.after += other.operators.after;
@@ -296,7 +296,7 @@ class HalsteadVisitor<Scenario::ProcessModel>
             for(const auto& elt : scenar.events)
             { visit(elt); }
 
-            for(const auto& elt : scenar.timeNodes)
+            for(const auto& elt : scenar.timeSyncs)
             { visit(elt); }
 
             for(const auto& elt : scenar.states)
@@ -352,7 +352,7 @@ class HalsteadVisitor<Scenario::ProcessModel>
             f.operators.event += 1;
             f.operands.variables[id(e)] += 1;
             f.operators.of += 1;
-            f.operands.variables[id(parentTimeNode(e, m_scenar))] += 1;
+            f.operands.variables[id(parentTimeSync(e, m_scenar))] += 1;
 
             if(e.condition().childCount() > 0)
             {
@@ -363,9 +363,9 @@ class HalsteadVisitor<Scenario::ProcessModel>
             }
         }
 
-        void visit(const Scenario::TimeNodeModel& tn)
+        void visit(const Scenario::TimeSyncModel& tn)
         {
-            f.operators.timenode += 1;
+            f.operators.timeSync += 1;
             f.operands.variables[id(tn)] += 1;
 
             if(tn.expression().childCount() > 0)
@@ -419,7 +419,7 @@ stal::Metrics::Halstead::ComputeFactors(const Scenario::ProcessModel& scenar)
 // 1. on liste tous les programmes
 // i.e. les bouts de code indépendants
 // 2. pour chaque entrée, on cherche les blocs "simples" (qui n'ont pas de conditions) :
-// on va de chaque contrainte au timenode le plus lointain qui n'a pas de trigger / condition.
+// on va de chaque contrainte au timeSync le plus lointain qui n'a pas de trigger / condition.
 // -> algorithme de flot avec marquage.
 
 
@@ -431,7 +431,7 @@ auto ConstraintsAttachedToStartInSameBlock(
         const Scenario_T& scenario)
 {
     // We make a list of events in the same block.
-    // It's the event on the parent timenode of the start of the constraint
+    // It's the event on the parent timeSync of the start of the constraint
     // with no conditions.
     //std::vector<Id<EventModel>> events_of_previous_block;
     std::vector<Id<EventModel>> events_of_next_block;
@@ -441,7 +441,7 @@ auto ConstraintsAttachedToStartInSameBlock(
     const EventModel& previous_event = startEvent(cst, scenario);
     events_of_next_block.push_back(previous_event.id());
 
-    const TimeNodeModel& tn = parentTimeNode(previous_event, scenario);
+    const TimeSyncModel& tn = parentTimeSync(previous_event, scenario);
     // If there is a trigger on the time node, we don't take into account
     // all the previous elements.
     bool trigger_exists = tn.expression().hasChildren();
@@ -457,7 +457,7 @@ auto ConstraintsAttachedToStartInSameBlock(
 //        }
 
 
-        // Check if there is a condition on the events in the same timenode.
+        // Check if there is a condition on the events in the same timeSync.
         for(const auto& event_id: tn.events())
         {
             if(event_id != previous_event.id())
@@ -578,7 +578,7 @@ struct Program
 {
         std::vector<Id<Scenario::ConstraintModel>> constraints;
         std::vector<Id<Scenario::EventModel>> events;
-        std::vector<Id<Scenario::TimeNodeModel>> nodes;
+        std::vector<Id<Scenario::TimeSyncModel>> nodes;
         std::vector<Id<Scenario::StateModel>> states;
 };
 
@@ -591,7 +591,7 @@ class ProgramVisitor
 
         std::map<Id<Scenario::ConstraintModel>, Mark> constraints;
         std::map<Id<Scenario::EventModel>, Mark> events;
-        std::map<Id<Scenario::TimeNodeModel>, Mark> nodes;
+        std::map<Id<Scenario::TimeSyncModel>, Mark> nodes;
         std::map<Id<Scenario::StateModel>, Mark> states;
 
         const Scenario::ProcessModel& m_scenar;
@@ -603,7 +603,7 @@ class ProgramVisitor
             {
                 constraints.insert(std::make_pair(elt.id(), NoMark));
             }
-            for(const auto& elt : scenar.timeNodes)
+            for(const auto& elt : scenar.timeSyncs)
             {
                 nodes.insert(std::make_pair(elt.id(), NoMark));
             }
@@ -689,11 +689,11 @@ class ProgramVisitor
             states.at(endState(cst, m_scenar).id()) = m;
             events.at(startEvent(cst, m_scenar).id()) = m;
             events.at(endEvent(cst, m_scenar).id()) = m;
-            nodes.at(startTimeNode(cst, m_scenar).id()) = m;
-            nodes.at(endTimeNode(cst, m_scenar).id()) = m;
+            nodes.at(startTimeSync(cst, m_scenar).id()) = m;
+            nodes.at(endTimeSync(cst, m_scenar).id()) = m;
 
             // Mark all that's before the start node.
-            auto& start_node = startTimeNode(cst, m_scenar);
+            auto& start_node = startTimeSync(cst, m_scenar);
             for(const auto& cst : previousConstraints(start_node, m_scenar))
             {
                 mark(cst, m);
@@ -706,7 +706,7 @@ class ProgramVisitor
             }
 
             // Mark all that's before the end node.
-            auto& end_node = endTimeNode(cst, m_scenar);
+            auto& end_node = endTimeSync(cst, m_scenar);
             for(const auto& cst : previousConstraints(end_node, m_scenar))
             {
                 mark(cst, m);
@@ -721,12 +721,12 @@ class ProgramVisitor
 
 };
 
-static auto startingTimeNodes(const Program& program, const Scenario::ProcessModel& scenario)
+static auto startingtimeSyncs(const Program& program, const Scenario::ProcessModel& scenario)
 {
-    std::list<Id<Scenario::TimeNodeModel>> startingNodes;
+    std::list<Id<Scenario::TimeSyncModel>> startingNodes;
     for(const auto& node_id : program.nodes)
     {
-        const auto& node = scenario.timeNodes.at(node_id);
+        const auto& node = scenario.timeSyncs.at(node_id);
         auto csts = previousConstraints(node, scenario);
         if(csts.empty())
         {
@@ -738,9 +738,9 @@ static auto startingTimeNodes(const Program& program, const Scenario::ProcessMod
 
 // For each starting point we propagate the flow in blocks in the following fashion :
 // Each condition yields a new block.
-// Each timenode with a trigger yields a new block.
+// Each timeSync with a trigger yields a new block.
 // Each starting point yields a new block.
-// If there is a single block before a timenode,
+// If there is a single block before a timeSync,
 // and if there is no trigger / condition, then the block continues afterwards.
 
 struct BaseBlock
@@ -749,7 +749,7 @@ struct BaseBlock
         int block{};
         std::vector<Id<Scenario::ConstraintModel>> constraints;
         std::vector<Id<Scenario::EventModel>> events;
-        std::vector<Id<Scenario::TimeNodeModel>> nodes;
+        std::vector<Id<Scenario::TimeSyncModel>> nodes;
 };
 
 class CyclomaticVisitor
@@ -759,7 +759,7 @@ class CyclomaticVisitor
 
         std::map<Id<Scenario::ConstraintModel>, Mark> constraints;
         std::map<Id<Scenario::EventModel>, Mark> events;
-        std::map<Id<Scenario::TimeNodeModel>, Mark> nodes;
+        std::map<Id<Scenario::TimeSyncModel>, Mark> nodes;
 
     public:
         const Program& m_program;
@@ -777,7 +777,7 @@ class CyclomaticVisitor
             {
                 constraints.insert(std::make_pair(elt.id(), NoMark));
             }
-            for(const auto& elt : scenar.timeNodes)
+            for(const auto& elt : scenar.timeSyncs)
             {
                 nodes.insert(std::make_pair(elt.id(), NoMark));
             }
@@ -786,7 +786,7 @@ class CyclomaticVisitor
                 events.insert(std::make_pair(elt.id(), NoMark));
             }
 
-            std::list<Id<TimeNodeModel>> startingNodes = startingTimeNodes(program, scenar);
+            std::list<Id<TimeSyncModel>> startingNodes = startingtimeSyncs(program, scenar);
             std::list<Id<EventModel>> startingEvents;
             while(!startingNodes.empty() || !startingEvents.empty())
             {
@@ -795,7 +795,7 @@ class CyclomaticVisitor
                     auto node_id = *startingNodes.begin();
                     auto val = computeNode(node_id, maxMark);
 
-                    std::list<Id<TimeNodeModel>> newNodes(val.first.begin(), val.first.end());
+                    std::list<Id<TimeSyncModel>> newNodes(val.first.begin(), val.first.end());
                     startingNodes.splice(startingNodes.end(), newNodes);
                     startingNodes.remove(node_id);
 
@@ -810,7 +810,7 @@ class CyclomaticVisitor
                     auto event_id = *startingEvents.begin();
                     auto val = computeEvent(event_id, maxMark);
 
-                    std::list<Id<TimeNodeModel>> newNodes(val.first.begin(), val.first.end());
+                    std::list<Id<TimeSyncModel>> newNodes(val.first.begin(), val.first.end());
                     startingNodes.splice(startingNodes.end(), newNodes);
 
                     std::list<Id<EventModel>> newEvents(val.second.begin(), val.second.end());
@@ -858,13 +858,13 @@ class CyclomaticVisitor
             }
             return blocks;
         }
-        std::pair<std::set<Id<Scenario::TimeNodeModel>>, std::set<Id<Scenario::EventModel>>> computeEvent(
+        std::pair<std::set<Id<Scenario::TimeSyncModel>>, std::set<Id<Scenario::EventModel>>> computeEvent(
                 const Id<Scenario::EventModel>& event,
                 Mark m)
         {
             using namespace Scenario;
-            std::set<Id<TimeNodeModel>> notSame,   prev_notSame;
-            std::set<Id<TimeNodeModel>> notSure,   prev_notSure;
+            std::set<Id<TimeSyncModel>> notSame,   prev_notSame;
+            std::set<Id<TimeSyncModel>> notSure,   prev_notSure;
             std::set<Id<EventModel>> notSameEvent, prev_notSameEvent;
 
             events.at(event) = m;
@@ -876,27 +876,27 @@ class CyclomaticVisitor
             return iterate(m, notSame, notSure, notSameEvent);
         }
 
-        std::pair<std::set<Id<Scenario::TimeNodeModel>>, std::set<Id<Scenario::EventModel>>> computeNode(
-                const Id<Scenario::TimeNodeModel>& node,
+        std::pair<std::set<Id<Scenario::TimeSyncModel>>, std::set<Id<Scenario::EventModel>>> computeNode(
+                const Id<Scenario::TimeSyncModel>& node,
                 Mark m)
         {
             using namespace Scenario;
-            std::set<Id<TimeNodeModel>> notSame;
-            std::set<Id<TimeNodeModel>> notSure;
+            std::set<Id<TimeSyncModel>> notSame;
+            std::set<Id<TimeSyncModel>> notSure;
             std::set<Id<EventModel>> notSameEvent;
             mark(node, m, notSame, notSure, notSameEvent);
             return iterate(m, notSame, notSure, notSameEvent);
         }
 
-        std::pair<std::set<Id<Scenario::TimeNodeModel>>, std::set<Id<Scenario::EventModel>>> iterate(
+        std::pair<std::set<Id<Scenario::TimeSyncModel>>, std::set<Id<Scenario::EventModel>>> iterate(
                 Mark m,
-                std::set<Id<Scenario::TimeNodeModel>>& notSame,
-                std::set<Id<Scenario::TimeNodeModel>>& notSure,
+                std::set<Id<Scenario::TimeSyncModel>>& notSame,
+                std::set<Id<Scenario::TimeSyncModel>>& notSure,
                 std::set<Id<Scenario::EventModel>>& notSameEvent)
         {
             using namespace Scenario;
-            std::set<Id<TimeNodeModel>> prev_notSame;
-            std::set<Id<TimeNodeModel>> prev_notSure;
+            std::set<Id<TimeSyncModel>> prev_notSame;
+            std::set<Id<TimeSyncModel>> prev_notSure;
             std::set<Id<EventModel>> prev_notSameEvent;
             do
             {
@@ -908,7 +908,7 @@ class CyclomaticVisitor
                 for(const auto& id : notSure)
                 {
                     // We check again since this may have changed
-                    auto newState = timeNodeIsInSameBlock(m_scenar.timeNodes.at(id), m);
+                    auto newState = timeSyncIsInSameBlock(m_scenar.timeSyncs.at(id), m);
 
                     switch(newState)
                     {
@@ -940,7 +940,7 @@ class CyclomaticVisitor
         //  not sure (some constraints are unmarked),
         //  not in same block
         enum class NodeInBlock { Same, NotSure, NotSame} ;
-        NodeInBlock timeNodeIsInSameBlock(const Scenario::TimeNodeModel& tn, Mark mark)
+        NodeInBlock timeSyncIsInSameBlock(const Scenario::TimeSyncModel& tn, Mark mark)
         {
             // True if no condition,
             // or if previous constraints are from different blocks
@@ -973,15 +973,15 @@ class CyclomaticVisitor
             return !ev.condition().hasChildren();
         }
 
-        void mark(const Id<Scenario::TimeNodeModel>& id,
+        void mark(const Id<Scenario::TimeSyncModel>& id,
                   Mark m,
-                  std::set<Id<Scenario::TimeNodeModel>>& notSame,
-                  std::set<Id<Scenario::TimeNodeModel>>& notSure,
+                  std::set<Id<Scenario::TimeSyncModel>>& notSame,
+                  std::set<Id<Scenario::TimeSyncModel>>& notSure,
                   std::set<Id<Scenario::EventModel>>& notSameEvent)
         {
             // We flow for as long as we can and stop once
             // new blocks are encountered
-            const auto& tn = m_scenar.timeNodes.at(id);
+            const auto& tn = m_scenar.timeSyncs.at(id);
             nodes.at(id) = m;
 
             // For each event, if they have a condition, they introduce a new mark
@@ -994,8 +994,8 @@ class CyclomaticVisitor
 
         void mark(const Id<Scenario::EventModel>& event_id,
                   Mark m,
-                  std::set<Id<Scenario::TimeNodeModel>>& notSame,
-                  std::set<Id<Scenario::TimeNodeModel>>& notSure,
+                  std::set<Id<Scenario::TimeSyncModel>>& notSame,
+                  std::set<Id<Scenario::TimeSyncModel>>& notSure,
                   std::set<Id<Scenario::EventModel>>& notSameEvent)
         {
             // We flow for as long as we can and stop once
@@ -1018,15 +1018,15 @@ class CyclomaticVisitor
 
         void mark(const Id<Scenario::ConstraintModel>& id,
                   Mark m,
-                  std::set<Id<Scenario::TimeNodeModel>>& notSame,
-                  std::set<Id<Scenario::TimeNodeModel>>& notSure,
+                  std::set<Id<Scenario::TimeSyncModel>>& notSame,
+                  std::set<Id<Scenario::TimeSyncModel>>& notSure,
                   std::set<Id<Scenario::EventModel>>& notSameEvent)
         {
             const auto& cst = m_scenar.constraints.at(id);
             constraints.at(id) = m;
 
-            const auto& endNode = endTimeNode(cst, m_scenar);
-            auto sameblock = timeNodeIsInSameBlock(endNode, m);
+            const auto& endNode = endTimeSync(cst, m_scenar);
+            auto sameblock = timeSyncIsInSameBlock(endNode, m);
             switch(sameblock)
             {
             case NodeInBlock::Same:
@@ -1091,7 +1091,7 @@ stal::Metrics::Cyclomatic::Factors stal::Metrics::Cyclomatic::ComputeFactors2(
                 elt.metadata().setLabel(QString::number(program_n) + " - " + QString::number(i));
 
 
-                auto& tn = endTimeNode(elt, scenar);
+                auto& tn = endTimeSync(elt, scenar);
                 auto it = ossia::find_if(blocks, [&] (const BaseBlock& block) {
                    return ossia::contains(block.nodes, tn.id());
                 });
@@ -1107,7 +1107,7 @@ stal::Metrics::Cyclomatic::Factors stal::Metrics::Cyclomatic::ComputeFactors2(
             }
             for(const auto& elt_id : block.nodes)
             {
-                auto& elt = scenar.timeNodes.at(elt_id);
+                auto& elt = scenar.timeSyncs.at(elt_id);
                 elt.metadata().setLabel(QString::number(program_n) + " - " + QString::number(i));
 
                 for(const auto& event : elt.events())

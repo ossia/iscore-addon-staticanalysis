@@ -363,7 +363,7 @@ const char* TAVisitor::space() const
 }
 
 
-void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
+void TAVisitor::visit(const Scenario::TimeSyncModel &timenode)
 {
     using namespace Scenario;
     // First we create a point for the timenode. The ingoing
@@ -436,7 +436,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
         scenario.broadcasts.insert(tn_point.event_e);
         scenario.broadcasts.insert(tn_point.event_s);
     }
-    else if(&timenode == &scenario.iscore_scenario.startTimeNode())
+    else if(&timenode == &scenario.iscore_scenario.startTimeSync())
     {
         tn_point.skip_p = scenario.skip;
         tn_point.event_s = scenario.event_s;
@@ -492,7 +492,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
         scenario.mixs.push_back(point_start_mix);
     }
 
-    tn_point.comment = "TimeNode Name : " + timenode.metadata().getName() + ". Label : " + timenode.metadata().getLabel();
+    tn_point.comment = "TimeSync Name : " + timenode.metadata().getName() + ". Label : " + timenode.metadata().getLabel();
 
     /*
     // We create a flexible that will go to each event of the timenode.
@@ -526,7 +526,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
 void TAVisitor::visit(const Scenario::EventModel &event)
 {
     using namespace Scenario;
-    const auto& timenode = parentTimeNode(event, scenario.iscore_scenario);
+    const auto& timenode = parentTimeSync(event, scenario.iscore_scenario);
     QString tn_name = name(timenode);
     auto it = ossia::find_if(scenario.points, [&] (const auto& point ) { return point.name == tn_name; });
     ISCORE_ASSERT(it != scenario.points.end());
@@ -600,7 +600,7 @@ void TAVisitor::visit(const Scenario::StateModel &state)
 void TAVisitor::visit(const Scenario::ProcessModel &s)
 {
     using namespace Scenario;
-    for(const TimeNodeModel& timenode : s.timeNodes)
+    for(const TimeSyncModel& timenode : s.timeSyncs)
     {
       visit(timenode);
     }
@@ -626,7 +626,7 @@ void TAVisitor::visit(const Scenario::ConstraintModel &c)
     using namespace Scenario;
     QString start_event_name = name(startEvent(c, scenario.iscore_scenario));
 
-    const TimeNodeModel& end_node = endTimeNode(c, scenario.iscore_scenario);
+    const TimeSyncModel& end_node = endTimeSync(c, scenario.iscore_scenario);
     QString end_node_name = name(end_node);
 
     auto prev_csts = previousConstraints(end_node, scenario.iscore_scenario);
