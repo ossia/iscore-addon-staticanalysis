@@ -1,7 +1,6 @@
 #include "TAConversion.hpp"
 #include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
 #include <Scenario/Document/State/ItemModel/MessageItemModel.hpp>
-#include <Scenario/Document/TimeNode/Trigger/TriggerModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <ossia/detail/algorithms.hpp>
@@ -380,9 +379,9 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
     tn_point.skip = "skip_" + tn_name;
     tn_point.event_t = "ok_" + tn_name;
 
-    if(timenode.trigger()->active())
+    if(timenode.active())
     {
-        set_point_condition(tn_point, timenode.trigger()->expression());
+        set_point_condition(tn_point, timenode.expression());
     }
     else
     {
@@ -451,7 +450,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
 
     // If there is a trigger we create a corresponding event.
 
-    if(timenode.trigger()->active())
+    if(timenode.active())
     {
         TA::Event_ND node_event{
             "EventND_" + tn_name,
@@ -477,7 +476,7 @@ void TAVisitor::visit(const Scenario::TimeNodeModel &timenode)
 
     }
 
-    if(! timenode.trigger()->active())
+    if(! timenode.active())
     {
         // TODO
         TA::Mix point_start_mix{

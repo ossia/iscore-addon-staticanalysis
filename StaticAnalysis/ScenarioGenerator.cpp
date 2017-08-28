@@ -495,7 +495,7 @@ void generateScenario(
         StateModel& state1 = *selector(scenar.states.get());
         auto& tn1 = Scenario::parentTimeNode(state1, scenar);
 
-        if(tn1.hasTrigger())
+        if(tn1.active())
             continue;
         disp.submitCommand(new Command::AddTrigger<ProcessModel>(tn1));
     }

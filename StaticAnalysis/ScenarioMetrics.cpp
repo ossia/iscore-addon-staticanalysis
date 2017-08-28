@@ -4,7 +4,6 @@
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/State/StateModel.hpp>
 #include <Scenario/Document/TimeNode/TimeNodeModel.hpp>
-#include <Scenario/Document/TimeNode/Trigger/TriggerModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <ossia/detail/algorithms.hpp>
 namespace stal
@@ -149,9 +148,9 @@ class LanguageVisitor<Scenario::ProcessModel>
             text += "timenode " + id(tn)
                     + QString("\n");
 
-            if(tn.trigger() && tn.trigger()->expression().childCount() > 0)
+            if(tn.expression().childCount() > 0)
             {
-                text += "expression '" + tn.trigger()->expression().toString()
+                text += "expression '" + tn.expression().toString()
                         + "' of " + id(tn)
                         + QString("\n");
             }
@@ -369,7 +368,7 @@ class HalsteadVisitor<Scenario::ProcessModel>
             f.operators.timenode += 1;
             f.operands.variables[id(tn)] += 1;
 
-            if(tn.trigger() && tn.trigger()->expression().childCount() > 0)
+            if(tn.expression().childCount() > 0)
             {
                 f.operators.expression += 1;
                 f.operands.expressions += 1;
@@ -445,7 +444,7 @@ auto ConstraintsAttachedToStartInSameBlock(
     const TimeNodeModel& tn = parentTimeNode(previous_event, scenario);
     // If there is a trigger on the time node, we don't take into account
     // all the previous elements.
-    bool trigger_exists = tn.trigger()->expression().hasChildren();
+    bool trigger_exists = tn.expression().hasChildren();
 
     // First check if there is a condition on the previous event.
     if(!previous_event.condition().hasChildren())
@@ -945,7 +944,7 @@ class CyclomaticVisitor
         {
             // True if no condition,
             // or if previous constraints are from different blocks
-            if(tn.trigger()->active())
+            if(tn.active())
                 return NodeInBlock::NotSame;
 
             auto prev_csts = previousConstraints(tn, m_scenar);
