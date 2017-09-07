@@ -1,6 +1,6 @@
 #include "ScenarioMetrics.hpp"
 #include <Scenario/Process/ScenarioModel.hpp>
-#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/State/StateModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
@@ -22,10 +22,10 @@ class LanguageVisitor;
 
     // Faire parallèle entre data flow et time flow ? dans data flow, cable est un opérateur
 
-    // Opérateurs:  after, of, duration, expression, {}, [;], constraint, state, event, timeSync, scenario, loop, automation
+    // Opérateurs:  after, of, duration, expression, {}, [;], interval, state, event, timeSync, scenario, loop, automation
     // ex.
     //
-    // constraint c1 after s0
+    // interval c1 after s0
     // duration [2, oo] of c1
 
     // scenario sx {
@@ -54,7 +54,7 @@ class LanguageVisitor<Scenario::ProcessModel>
             text += " {"
                     + QString("\n");
 
-            for(const auto& elt : scenar.constraints)
+            for(const auto& elt : scenar.intervals)
             {
                 visit(elt);
             }
@@ -83,7 +83,7 @@ class LanguageVisitor<Scenario::ProcessModel>
             return QString(Metadata<Description_k, T>::get()) + QString::number(c.id_val());
         }
 
-        QString duration(const Scenario::ConstraintModel& c)
+        QString duration(const Scenario::IntervalModel& c)
         {
             QString s;
             if(c.duration.isRigid())
@@ -107,9 +107,9 @@ class LanguageVisitor<Scenario::ProcessModel>
             return s;
         }
 
-        void visit(const Scenario::ConstraintModel& c)
+        void visit(const Scenario::IntervalModel& c)
         {
-            text += "constraint "   + id(c)
+            text += "interval "   + id(c)
                     + " after " + id(startState(c, m_scenar))
                     + QString("\n");
             text += "duration " + duration(c)
@@ -158,10 +158,10 @@ class LanguageVisitor<Scenario::ProcessModel>
 
         void visit(const Scenario::StateModel& st)
         {
-            if(st.previousConstraint())
+            if(st.previousInterval())
             {
                 text += "state " + id(st)
-                        + " after " + id(previousConstraint(st, m_scenar))
+                        + " after " + id(previousInterval(st, m_scenar))
                         + QString("\n");
             }
 
@@ -177,7 +177,7 @@ struct ScenarioFactors
         struct operators_t {
                 int scenario{};
 
-                int constraint{};
+                int interval{};
                 int event{};
                 int state{};
                 int timeSync{};
@@ -192,7 +192,7 @@ struct ScenarioFactors
 
                 std::vector<int> toVector() const
                 {
-                    return {scenario, constraint, event, state, timeSync, of, after, lbrace, rbrace, expression, duration};
+                    return {scenario, interval, event, state, timeSync, of, after, lbrace, rbrace, expression, duration};
                 }
 
         } operators;
@@ -202,8 +202,8 @@ struct ScenarioFactors
                 QMap<QString, int> variables;
                 std::vector<QMap<QString, int>> subprocesses_variables;
                 int expressions{};
-                int constraint_rigid_times{};
-                int constraint_minmax_times{};
+                int interval_rigid_times{};
+                int interval_minmax_times{};
 
 
                 std::vector<int> toVector() const
@@ -224,8 +224,8 @@ struct ScenarioFactors
                     }
 
                     v.push_back(expressions);
-                    v.push_back(constraint_rigid_times);
-                    v.push_back(constraint_minmax_times);
+                    v.push_back(interval_rigid_times);
+                    v.push_back(interval_minmax_times);
 
                     return v;
                 }
@@ -236,7 +236,7 @@ struct ScenarioFactors
         {
             operators.scenario += other.operators.scenario;
 
-            operators.constraint += other.operators.constraint;
+            operators.interval += other.operators.interval;
             operators.event += other.operators.event;
             operators.state += other.operators.state;
             operators.timeSync += other.operators.timeSync;
@@ -253,8 +253,8 @@ struct ScenarioFactors
             ossia::copy(other.operands.subprocesses_variables, operands.subprocesses_variables);
 
             operands.expressions += other.operands.expressions;
-            operands.constraint_rigid_times += other.operands.constraint_rigid_times;
-            operands.constraint_minmax_times += other.operands.constraint_minmax_times;
+            operands.interval_rigid_times += other.operands.interval_rigid_times;
+            operands.interval_minmax_times += other.operands.interval_minmax_times;
 
             return *this;
             // TODO -Werror=return-type
@@ -290,7 +290,7 @@ class HalsteadVisitor<Scenario::ProcessModel>
         {
             f.operators.lbrace += 1;
 
-            for(const auto& elt : scenar.constraints)
+            for(const auto& elt : scenar.intervals)
             { visit(elt); }
 
             for(const auto& elt : scenar.events)
@@ -311,21 +311,21 @@ class HalsteadVisitor<Scenario::ProcessModel>
             return QString(Metadata<Description_k, T>::get()) + QString::number(c.id_val());
         }
 
-        void duration(const Scenario::ConstraintModel& c)
+        void duration(const Scenario::IntervalModel& c)
         {
             if(c.duration.isRigid())
             {
-                f.operands.constraint_rigid_times += 1;
+                f.operands.interval_rigid_times += 1;
             }
             else
             {
-                f.operands.constraint_minmax_times += 1;
+                f.operands.interval_minmax_times += 1;
             }
         }
 
-        void visit(const Scenario::ConstraintModel& c)
+        void visit(const Scenario::IntervalModel& c)
         {
-            f.operators.constraint += 1;
+            f.operators.interval += 1;
             f.operands.variables[id(c)] += 1;
             f.operators.after += 1;
             f.operands.variables[id(startState(c, m_scenar))] += 1;
@@ -379,12 +379,12 @@ class HalsteadVisitor<Scenario::ProcessModel>
 
         void visit(const Scenario::StateModel& st)
         {
-            if(st.previousConstraint())
+            if(st.previousInterval())
             {
                 f.operators.state += 1;
                 f.operands.variables[id(st)] += 1;
                 f.operators.after += 1;
-                f.operands.variables[id(previousConstraint(st, m_scenar))] += 1;
+                f.operands.variables[id(previousInterval(st, m_scenar))] += 1;
             }
 
             f.operators.state += 1;
@@ -426,18 +426,18 @@ stal::Metrics::Halstead::ComputeFactors(const Scenario::ProcessModel& scenar)
 
 /*
 template<typename Scenario_T>
-auto ConstraintsAttachedToStartInSameBlock(
-        const ConstraintModel& cst,
+auto IntervalsAttachedToStartInSameBlock(
+        const IntervalModel& cst,
         const Scenario_T& scenario)
 {
     // We make a list of events in the same block.
-    // It's the event on the parent timeSync of the start of the constraint
+    // It's the event on the parent timeSync of the start of the interval
     // with no conditions.
     //std::vector<Id<EventModel>> events_of_previous_block;
     std::vector<Id<EventModel>> events_of_next_block;
 
-    // We at least return the next constraints on the start event.
-    std::vector<Id<ConstraintModel>> constraints;
+    // We at least return the next intervals on the start event.
+    std::vector<Id<IntervalModel>> intervals;
     const EventModel& previous_event = startEvent(cst, scenario);
     events_of_next_block.push_back(previous_event.id());
 
@@ -450,7 +450,7 @@ auto ConstraintsAttachedToStartInSameBlock(
     if(!previous_event.condition().hasChildren())
     {
 
-        // We can add the previous constraints.
+        // We can add the previous intervals.
 //        if(!trigger_exists)
 //        {
 //            events_of_previous_block.push_back(previous_event.id());
@@ -476,15 +476,15 @@ auto ConstraintsAttachedToStartInSameBlock(
     }
 
     // Now, for each previous & next block event,
-    // we add the constraints.
+    // we add the intervals.
     for(auto& event_id : events_of_next_block)
     {
         const auto& ev = scenario.events.at(event_id);
-        for(auto& constraint : nextConstraints(ev, scenario))
+        for(auto& interval : nextIntervals(ev, scenario))
         {
-            if(constraint != cst.id())
+            if(interval != cst.id())
             {
-                constraints.push_back(constraint);
+                intervals.push_back(interval);
             }
         }
     }
@@ -492,25 +492,25 @@ auto ConstraintsAttachedToStartInSameBlock(
 //    for(auto& event_id : events_of_previous_block)
 //    {
 //        const auto& ev = scenario.events.at(event_id);
-//        for(auto& constraint : previousConstraints(ev, scenario))
+//        for(auto& interval : previousIntervals(ev, scenario))
 //        {
-//            constraints.push_back(constraint);
+//            intervals.push_back(interval);
 //        }
 //    }
 
-    return constraints;
+    return intervals;
 }
 
-struct MarkedConstraints
+struct MarkedIntervals
 {
     using Mark = int;
     Mark currentMark = 0;
     static const constexpr int NoMark = -1;
     const Scenario::ProcessModel& m_scenar;
-    MarkedConstraints(const Scenario::ProcessModel& scenar):
+    MarkedIntervals(const Scenario::ProcessModel& scenar):
         m_scenar{scenar}
     {
-        for(const auto& cst : scenar.constraints)
+        for(const auto& cst : scenar.intervals)
         {
             marks.insert(std::make_pair(cst.id(), NoMark));
         }
@@ -518,10 +518,10 @@ struct MarkedConstraints
         marking();
     }
 
-    void mark_recursive_previous(const Id<ConstraintModel>& id, Mark mark)
+    void mark_recursive_previous(const Id<IntervalModel>& id, Mark mark)
     {
-        auto& cst = m_scenar.constraints.at(id);
-        for(const auto& c_id : ConstraintsAttachedToStartInSameBlock(cst, m_scenar))
+        auto& cst = m_scenar.intervals.at(id);
+        for(const auto& c_id : IntervalsAttachedToStartInSameBlock(cst, m_scenar))
         {
             marks.at(cst.id()) = mark;
             mark_recursive_previous(c_id, mark);
@@ -529,11 +529,11 @@ struct MarkedConstraints
         }
     }
 
-    void mark_recursive_next(const Id<ConstraintModel>& id, Mark mark)
+    void mark_recursive_next(const Id<IntervalModel>& id, Mark mark)
     {
 
-        auto& cst = m_scenar.constraints.at(id);
-        for(const auto& c_id : ConstraintsAttachedToEndInSameBlock(cst, m_scenar))
+        auto& cst = m_scenar.intervals.at(id);
+        for(const auto& c_id : IntervalsAttachedToEndInSameBlock(cst, m_scenar))
         {
             marks.at(cst.id()) = mark;
             mark_recursive_previous(c_id, mark);
@@ -554,9 +554,9 @@ struct MarkedConstraints
 
 
 
-        for(const auto& cst : m_scenar.constraints)
+        for(const auto& cst : m_scenar.intervals)
         {
-            // We start from constraints that don't have previous constraints.
+            // We start from intervals that don't have previous intervals.
 
             if(marks.at(cst.id()) == NoMark)
             {
@@ -570,13 +570,13 @@ struct MarkedConstraints
         }
     }
 
-    std::map<Id<ConstraintModel>, int> marks;
+    std::map<Id<IntervalModel>, int> marks;
 };
 */
 
 struct Program
 {
-        std::vector<Id<Scenario::ConstraintModel>> constraints;
+        std::vector<Id<Scenario::IntervalModel>> intervals;
         std::vector<Id<Scenario::EventModel>> events;
         std::vector<Id<Scenario::TimeSyncModel>> nodes;
         std::vector<Id<Scenario::StateModel>> states;
@@ -584,12 +584,12 @@ struct Program
 
 using Mark = int;
 static const constexpr int NoMark = -1;
-// A program is a connected set of constraints, etc.
+// A program is a connected set of intervals, etc.
 class ProgramVisitor
 {
         Mark currentMark = 0;
 
-        std::map<Id<Scenario::ConstraintModel>, Mark> constraints;
+        std::map<Id<Scenario::IntervalModel>, Mark> intervals;
         std::map<Id<Scenario::EventModel>, Mark> events;
         std::map<Id<Scenario::TimeSyncModel>, Mark> nodes;
         std::map<Id<Scenario::StateModel>, Mark> states;
@@ -599,9 +599,9 @@ class ProgramVisitor
         ProgramVisitor(const Scenario::ProcessModel& scenar):
             m_scenar{scenar}
         {
-            for(const auto& elt : scenar.constraints)
+            for(const auto& elt : scenar.intervals)
             {
-                constraints.insert(std::make_pair(elt.id(), NoMark));
+                intervals.insert(std::make_pair(elt.id(), NoMark));
             }
             for(const auto& elt : scenar.timeSyncs)
             {
@@ -616,12 +616,12 @@ class ProgramVisitor
                 states.insert(std::make_pair(elt.id(), NoMark));
             }
 
-            // Take a constraint and recursively mark everything
-            for(const auto& constraint : scenar.constraints)
+            // Take a interval and recursively mark everything
+            for(const auto& interval : scenar.intervals)
             {
-                if(constraints.at(constraint.id()) == NoMark)
+                if(intervals.at(interval.id()) == NoMark)
                 {
-                    mark(constraint.id(), currentMark);
+                    mark(interval.id(), currentMark);
                     currentMark++;
                 }
             }
@@ -635,11 +635,11 @@ class ProgramVisitor
             {
                 Program p;
 
-                for(const auto& elt : constraints)
+                for(const auto& elt : intervals)
                 {
                     if(elt.second == m)
                     {
-                        p.constraints.push_back(elt.first);
+                        p.intervals.push_back(elt.first);
                     }
                 }
 
@@ -674,17 +674,17 @@ class ProgramVisitor
         }
 
     private:
-        void mark(const Id<Scenario::ConstraintModel>& cid, Mark m)
+        void mark(const Id<Scenario::IntervalModel>& cid, Mark m)
         {
-            ISCORE_ASSERT(constraints.at(cid) == m || constraints.at(cid) == NoMark);
-            if(constraints.at(cid) == m)
+            ISCORE_ASSERT(intervals.at(cid) == m || intervals.at(cid) == NoMark);
+            if(intervals.at(cid) == m)
             {
                 return;
             }
 
-            constraints.at(cid) = m;
+            intervals.at(cid) = m;
 
-            auto& cst = m_scenar.constraints.at(cid);
+            auto& cst = m_scenar.intervals.at(cid);
             states.at(startState(cst, m_scenar).id()) = m;
             states.at(endState(cst, m_scenar).id()) = m;
             events.at(startEvent(cst, m_scenar).id()) = m;
@@ -694,26 +694,26 @@ class ProgramVisitor
 
             // Mark all that's before the start node.
             auto& start_node = startTimeSync(cst, m_scenar);
-            for(const auto& cst : previousConstraints(start_node, m_scenar))
+            for(const auto& cst : previousIntervals(start_node, m_scenar))
             {
                 mark(cst, m);
             }
 
             // Mark all that's after the start node.
-            for(const auto& cst : nextConstraints(start_node, m_scenar))
+            for(const auto& cst : nextIntervals(start_node, m_scenar))
             {
                 mark(cst, m);
             }
 
             // Mark all that's before the end node.
             auto& end_node = endTimeSync(cst, m_scenar);
-            for(const auto& cst : previousConstraints(end_node, m_scenar))
+            for(const auto& cst : previousIntervals(end_node, m_scenar))
             {
                 mark(cst, m);
             }
 
             // Mark all that's after the end node.
-            for(const auto& cst : nextConstraints(end_node, m_scenar))
+            for(const auto& cst : nextIntervals(end_node, m_scenar))
             {
                 mark(cst, m);
             }
@@ -727,7 +727,7 @@ static auto startingtimeSyncs(const Program& program, const Scenario::ProcessMod
     for(const auto& node_id : program.nodes)
     {
         const auto& node = scenario.timeSyncs.at(node_id);
-        auto csts = previousConstraints(node, scenario);
+        auto csts = previousIntervals(node, scenario);
         if(csts.empty())
         {
             startingNodes.push_back(node_id);
@@ -747,7 +747,7 @@ struct BaseBlock
 {
         BaseBlock(int b): block{b} {}
         int block{};
-        std::vector<Id<Scenario::ConstraintModel>> constraints;
+        std::vector<Id<Scenario::IntervalModel>> intervals;
         std::vector<Id<Scenario::EventModel>> events;
         std::vector<Id<Scenario::TimeSyncModel>> nodes;
 };
@@ -757,7 +757,7 @@ class CyclomaticVisitor
         // Here the mark refers to the block id of the group of elements.
         Mark maxMark = 0;
 
-        std::map<Id<Scenario::ConstraintModel>, Mark> constraints;
+        std::map<Id<Scenario::IntervalModel>, Mark> intervals;
         std::map<Id<Scenario::EventModel>, Mark> events;
         std::map<Id<Scenario::TimeSyncModel>, Mark> nodes;
 
@@ -773,9 +773,9 @@ class CyclomaticVisitor
         {
             using namespace Scenario;
 
-            for(const auto& elt : scenar.constraints)
+            for(const auto& elt : scenar.intervals)
             {
-                constraints.insert(std::make_pair(elt.id(), NoMark));
+                intervals.insert(std::make_pair(elt.id(), NoMark));
             }
             for(const auto& elt : scenar.timeSyncs)
             {
@@ -830,11 +830,11 @@ class CyclomaticVisitor
             {
                 BaseBlock b{m};
 
-                for(const auto& elt : constraints)
+                for(const auto& elt : intervals)
                 {
                     if(elt.second == m)
                     {
-                        b.constraints.push_back(elt.first);
+                        b.intervals.push_back(elt.first);
                     }
                 }
 
@@ -869,7 +869,7 @@ class CyclomaticVisitor
 
             events.at(event) = m;
             const auto& ev = m_scenar.events.at(event);
-            for(const auto& cid : nextConstraints(ev, m_scenar))
+            for(const auto& cid : nextIntervals(ev, m_scenar))
             {
                 mark(cid, m, notSame, notSure, notSameEvent);
             }
@@ -937,27 +937,27 @@ class CyclomaticVisitor
 
         // Three levels :
         //  in same block,
-        //  not sure (some constraints are unmarked),
+        //  not sure (some intervals are unmarked),
         //  not in same block
         enum class NodeInBlock { Same, NotSure, NotSame} ;
         NodeInBlock timeSyncIsInSameBlock(const Scenario::TimeSyncModel& tn, Mark mark)
         {
             // True if no condition,
-            // or if previous constraints are from different blocks
+            // or if previous intervals are from different blocks
             if(tn.active())
                 return NodeInBlock::NotSame;
 
-            auto prev_csts = previousConstraints(tn, m_scenar);
+            auto prev_csts = previousIntervals(tn, m_scenar);
             if(ossia::any_of(prev_csts, [&] (const auto& cst) {
-                      auto constraint_mark = constraints.at(cst);
-                    return constraint_mark != mark && constraint_mark != NoMark;
+                      auto interval_mark = intervals.at(cst);
+                    return interval_mark != mark && interval_mark != NoMark;
                 }))
             {
                 return NodeInBlock::NotSame;
             }
             else if(ossia::any_of(prev_csts, [&] (const auto& cst) {
-                           auto constraint_mark = constraints.at(cst);
-                         return constraint_mark != mark && constraint_mark == NoMark;
+                           auto interval_mark = intervals.at(cst);
+                         return interval_mark != mark && interval_mark == NoMark;
                      }))
             {
                 return NodeInBlock::NotSure;
@@ -1004,7 +1004,7 @@ class CyclomaticVisitor
             if(eventIsInSameBlock(ev))
             {
                 events.at(event_id) = m;
-                for(const auto& cid : nextConstraints(ev, m_scenar))
+                for(const auto& cid : nextIntervals(ev, m_scenar))
                 {
                     mark(cid, m, notSame, notSure, notSameEvent);
                 }
@@ -1016,14 +1016,14 @@ class CyclomaticVisitor
 
         }
 
-        void mark(const Id<Scenario::ConstraintModel>& id,
+        void mark(const Id<Scenario::IntervalModel>& id,
                   Mark m,
                   std::set<Id<Scenario::TimeSyncModel>>& notSame,
                   std::set<Id<Scenario::TimeSyncModel>>& notSure,
                   std::set<Id<Scenario::EventModel>>& notSameEvent)
         {
-            const auto& cst = m_scenar.constraints.at(id);
-            constraints.at(id) = m;
+            const auto& cst = m_scenar.intervals.at(id);
+            intervals.at(id) = m;
 
             const auto& endNode = endTimeSync(cst, m_scenar);
             auto sameblock = timeSyncIsInSameBlock(endNode, m);
@@ -1051,9 +1051,9 @@ stal::Metrics::Cyclomatic::ComputeFactors(
 
     // For each program, we count the number of edge / vertice.
 
-    // First case : each constraint is an edge, each node / event is a vertice.
+    // First case : each interval is an edge, each node / event is a vertice.
     int N = std::accumulate(programs.begin(), programs.end(), 0,
-                            [] (int size, const Program& program) { return size + program.constraints.size(); });
+                            [] (int size, const Program& program) { return size + program.intervals.size(); });
     int E_events = std::accumulate(programs.begin(), programs.end(), 0,
                                    [] (int size, const Program& program) { return size + program.events.size(); });
     int E_nodes = std::accumulate(programs.begin(), programs.end(), 0,
@@ -1085,9 +1085,9 @@ stal::Metrics::Cyclomatic::Factors stal::Metrics::Cyclomatic::ComputeFactors2(
             std::set<int> nextBlocks;
             // We search all the adjacent forward blocks and we add edges.
 
-            for(const auto& elt_id : block.constraints)
+            for(const auto& elt_id : block.intervals)
             {
-                auto& elt = scenar.constraints.at(elt_id);
+                auto& elt = scenar.intervals.at(elt_id);
                 elt.metadata().setLabel(QString::number(program_n) + " - " + QString::number(i));
 
 

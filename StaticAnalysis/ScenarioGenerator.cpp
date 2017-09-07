@@ -1,8 +1,8 @@
 #include "ScenarioGenerator.hpp"
 #include <Scenario/Commands/Scenario/Creations/CreateState.hpp>
-#include <Scenario/Commands/Scenario/Creations/CreateConstraint_State_Event_TimeSync.hpp>
+#include <Scenario/Commands/Scenario/Creations/CreateInterval_State_Event_TimeSync.hpp>
 #include <Scenario/Commands/Scenario/Creations/CreateEvent_State.hpp>
-#include <Scenario/Commands/Scenario/Creations/CreateConstraint.hpp>
+#include <Scenario/Commands/Scenario/Creations/CreateInterval.hpp>
 #include <Scenario/Commands/TimeSync/AddTrigger.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
@@ -11,9 +11,9 @@
 #include <Loop/LoopProcessModel.hpp>
 
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
-#include <Scenario/Commands/Constraint/AddProcessToConstraint.hpp>
-#include <Scenario/Commands/Constraint/SetMaxDuration.hpp>
-#include <Scenario/Commands/Constraint/SetMinDuration.hpp>
+#include <Scenario/Commands/Interval/AddProcessToInterval.hpp>
+#include <Scenario/Commands/Interval/SetMaxDuration.hpp>
+#include <Scenario/Commands/Interval/SetMinDuration.hpp>
 
 #include <QFileDialog>
 #include <QFile>
@@ -160,7 +160,7 @@ auto addMessageToState(
     disp.submitCommand(cmd);
 }
 
-static auto createConstraint(
+static auto createInterval(
     CommandDispatcher<>& disp,
     const Scenario::ProcessModel& scenario,
     const Scenario::StateModel& startState,
@@ -177,7 +177,7 @@ static auto createConstraint(
   disp.submitCommand(new_state_cmd);
   auto& new_state = scenario.state(new_state_cmd->createdState());
 
-  auto state_command = new CreateConstraint_State_Event_TimeSync(
+  auto state_command = new CreateInterval_State_Event_TimeSync(
               scenario,                   // scenario
               new_state.id(),             // start state id
               Scenario::parentEvent(new_state, scenario).date() + TimeVal::fromMsecs(duration), // duration
@@ -205,11 +205,11 @@ void createTrigger(
   disp.submitCommand(trigger_command);
 
    // Change Minimum Duration
-   auto set_min_cmd = new SetMinDuration(scenario.constraint(*state.previousConstraint()), min_duration, min_duration.isZero());
+   auto set_min_cmd = new SetMinDuration(scenario.interval(*state.previousInterval()), min_duration, min_duration.isZero());
    disp.submitCommand(set_min_cmd);
 
    // Change Maximum Duration
-   auto set_max_cmd = new SetMaxDuration(scenario.constraint(*state.previousConstraint()), max_duration, max_duration.isInfinite());
+   auto set_max_cmd = new SetMaxDuration(scenario.interval(*state.previousInterval()), max_duration, max_duration.isInfinite());
    disp.submitCommand(set_max_cmd);
 }
 
@@ -223,26 +223,26 @@ static auto createPlace(
   using namespace Scenario;
   using namespace Scenario::Command;
 
-  // Create constraint
-  auto state_place_cmd = createConstraint(disp, scenario, startState, 12000, posY);
+  // Create interval
+  auto state_place_cmd = createInterval(disp, scenario, startState, 12000, posY);
   auto& loop_state = scenario.state(state_place_cmd->createdState());
   createTrigger(disp, scenario, loop_state, TimeVal::zero(), TimeVal::infinite());
 
   // Create the loop
-  auto& new_constraint = scenario.constraint(state_place_cmd->createdConstraint());
-  auto create_loop_cmd = new AddProcessToConstraint(
-              new_constraint,
+  auto& new_interval = scenario.interval(state_place_cmd->createdInterval());
+  auto create_loop_cmd = new AddProcessToInterval(
+              new_interval,
               Metadata<ConcreteKey_k, Loop::ProcessModel>::get());
   disp.submitCommand(create_loop_cmd);
 
   // Create loop pattern
-  auto& loop = dynamic_cast<Loop::ProcessModel&>(new_constraint.processes.at(create_loop_cmd->processId()));
-  auto& pattern = loop.constraint();
+  auto& loop = dynamic_cast<Loop::ProcessModel&>(new_interval.processes.at(create_loop_cmd->processId()));
+  auto& pattern = loop.interval();
 
   auto& pattern_state = loop.state(pattern.endState());
   createTrigger(disp, loop, pattern_state, TimeVal::zero(), TimeVal::infinite());
 
-  auto create_scenario_cmd = new AddProcessToConstraint(
+  auto create_scenario_cmd = new AddProcessToInterval(
               pattern,
               Metadata<ConcreteKey_k, Scenario::ProcessModel>::get());
   disp.submitCommand(create_scenario_cmd);
@@ -292,8 +292,8 @@ static auto& createTransition(
   using namespace Scenario;
   using namespace Scenario::Command;
 
-  // Create the constraint
-  auto state_command = createConstraint(disp, scenario, startState, 4000, posY);
+  // Create the interval
+  auto state_command = createInterval(disp, scenario, startState, 4000, posY);
   auto& new_state = scenario.state(state_command->createdState());
 
   // Create the trigger point
@@ -449,12 +449,12 @@ void generateScenario(
             {
                 // Get a random state to start from;
                 StateModel& state = *selector(scenar.states.get());
-                if(!state.nextConstraint())
+                if(!state.nextInterval())
                 {
                     const TimeSyncModel& parentNode = parentTimeSync(state, scenar);
                     Id<StateModel> state_id = state.id();
                     TimeVal t = TimeVal::fromMsecs(rand() % 20000) + parentNode.date();
-                    disp.submitCommand(new Command::CreateConstraint_State_Event_TimeSync(scenar, state_id, t, state.heightPercentage()));
+                    disp.submitCommand(new Command::CreateInterval_State_Event_TimeSync(scenar, state_id, t, state.heightPercentage()));
                 }
                 break;
             }
@@ -479,13 +479,13 @@ void generateScenario(
         auto t2 = tn2.date();
         if(t1 < t2)
         {
-            if(!state2.previousConstraint() && !state1.nextConstraint())
-                disp.submitCommand(new Command::CreateConstraint(scenar, state1.id(), state2.id()));
+            if(!state2.previousInterval() && !state1.nextInterval())
+                disp.submitCommand(new Command::CreateInterval(scenar, state1.id(), state2.id()));
         }
         else if (t1 > t2)
         {
-            if(!state1.previousConstraint() && !state2.nextConstraint())
-                disp.submitCommand(new Command::CreateConstraint(scenar, state2.id(), state1.id()));
+            if(!state1.previousInterval() && !state2.nextInterval())
+                disp.submitCommand(new Command::CreateInterval(scenar, state2.id(), state1.id()));
         }
     }
     for(auto i = 0; i < N/5; i++)

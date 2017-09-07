@@ -1,5 +1,5 @@
 #include <Scenario/Document/BaseScenario/BaseScenario.hpp>
-#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/ScenarioDocument/ScenarioDocumentModel.hpp>
 #include <Scenario/Document/State/StateModel.hpp>
@@ -16,7 +16,7 @@
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Process/Process.hpp>
 #include <Process/State/MessageNode.hpp>
-#include <Scenario/Document/Constraint/ConstraintDurations.hpp>
+#include <Scenario/Document/Interval/IntervalDurations.hpp>
 #include <Scenario/Document/State/ItemModel/MessageItemModel.hpp>
 #include <StaticAnalysis/ScenarioVisitor.hpp>
 #include <State/Message.hpp>
@@ -53,11 +53,11 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
             return;
         Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
 
-        const auto& baseConstraint = base.baseScenario().constraint();
-        if(baseConstraint.processes.size() == 0)
+        const auto& baseInterval = base.baseScenario().interval();
+        if(baseInterval.processes.size() == 0)
             return;
 
-        auto firstScenario = dynamic_cast<Scenario::ProcessModel*>(&*baseConstraint.processes.begin());
+        auto firstScenario = dynamic_cast<Scenario::ProcessModel*>(&*baseInterval.processes.begin());
         if(!firstScenario)
             return;
 
@@ -72,11 +72,11 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
             return;
         Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
 
-        const auto& baseConstraint = base.baseScenario().constraint();
-        if(baseConstraint.processes.size() == 0)
+        const auto& baseInterval = base.baseScenario().interval();
+        if(baseInterval.processes.size() == 0)
             return;
 
-        auto firstScenario = dynamic_cast<Scenario::ProcessModel*>(&*baseConstraint.processes.begin());
+        auto firstScenario = dynamic_cast<Scenario::ProcessModel*>(&*baseInterval.processes.begin());
         if(!firstScenario)
             return;
 
@@ -102,7 +102,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
                 }
 
                 {
-                    QString text = TA::makeScenario(base.baseScenario().constraint());
+                    QString text = TA::makeScenario(base.baseScenario().interval());
                     QFile f(baseName + ".xml");
                     f.open(QFile::WriteOnly);
                     f.write(text.toUtf8());
@@ -121,7 +121,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
             return;
         Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
 
-        QString text = TA::makeScenario(base.baseScenario().constraint());
+        QString text = TA::makeScenario(base.baseScenario().interval());
         Scenario::TextDialog dial(text, qApp->activeWindow());
         dial.exec();
 
@@ -139,7 +139,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
             return;
 
         Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
-        auto& baseScenario = static_cast<Scenario::ProcessModel&>(*base.baseScenario().constraint().processes.begin());
+        auto& baseScenario = static_cast<Scenario::ProcessModel&>(*base.baseScenario().interval().processes.begin());
 
         using namespace stal::Metrics;
         // Language
@@ -170,7 +170,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         if(!doc)
             return;
         Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
-        auto& baseScenario = static_cast<Scenario::ProcessModel&>(*base.baseScenario().constraint().processes.begin());
+        auto& baseScenario = static_cast<Scenario::ProcessModel&>(*base.baseScenario().interval().processes.begin());
 
         QFileDialog d{qApp->activeWindow(), tr("Save Document As")};
         d.setNameFilter(("tex files (*.tex)"));

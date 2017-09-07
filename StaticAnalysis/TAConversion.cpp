@@ -262,7 +262,7 @@ static void insert(TA::ScenarioContent& source, TA::ScenarioContent& dest)
 
 template<typename T>
 static void visitProcesses(
-        const Scenario::ConstraintModel& c,
+        const Scenario::IntervalModel& c,
         const T& ta_cst,
         TA::ScenarioContent& content)
 {
@@ -284,7 +284,7 @@ static void visitProcesses(
     }
 }
 
-QString makeScenario(const Scenario::ConstraintModel &c)
+QString makeScenario(const Scenario::IntervalModel &c)
 {
     using namespace Scenario;
     // Our register of elements
@@ -367,7 +367,7 @@ void TAVisitor::visit(const Scenario::TimeSyncModel &timenode)
 {
     using namespace Scenario;
     // First we create a point for the timenode. The ingoing
-    // constraints will end on this point.
+    // intervals will end on this point.
 
     QString tn_name = name(timenode);
     // Create an interaction point.
@@ -398,9 +398,9 @@ void TAVisitor::visit(const Scenario::TimeSyncModel &timenode)
     scenario.broadcasts.insert(tn_point.skip);
     scenario.broadcasts.insert(tn_point.event_t);
 
-    // If there are multiple constraints ending on this timenode,
+    // If there are multiple intervals ending on this timenode,
     // we put a Control inbetween.
-    auto prev_csts = previousConstraints(timenode, scenario.iscore_scenario);
+    auto prev_csts = previousIntervals(timenode, scenario.iscore_scenario);
     if(prev_csts.size() > 1)
     {
         QString control_name = "Control_" + tn_name;
@@ -615,13 +615,13 @@ void TAVisitor::visit(const Scenario::ProcessModel &s)
       visit(state);
     }
 
-    for(const ConstraintModel& constraint : s.constraints)
+    for(const IntervalModel& interval : s.intervals)
     {
-      visit(constraint);
+      visit(interval);
     }
 }
 
-void TAVisitor::visit(const Scenario::ConstraintModel &c)
+void TAVisitor::visit(const Scenario::IntervalModel &c)
 {
     using namespace Scenario;
     QString start_event_name = name(startEvent(c, scenario.iscore_scenario));
@@ -629,7 +629,7 @@ void TAVisitor::visit(const Scenario::ConstraintModel &c)
     const TimeSyncModel& end_node = endTimeSync(c, scenario.iscore_scenario);
     QString end_node_name = name(end_node);
 
-    auto prev_csts = previousConstraints(end_node, scenario.iscore_scenario);
+    auto prev_csts = previousIntervals(end_node, scenario.iscore_scenario);
     QString event_e1;
     QString event_e2;
     QString skip;

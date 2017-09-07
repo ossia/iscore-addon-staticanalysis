@@ -6,15 +6,15 @@ namespace stal
 {
 struct ScenarioStatistics
 {
-    int constraints{};
+    int intervals{};
     int events{};
     int nodes{};
     int empty_states{};
     int states{};
 
     int processes{};
-    int processesPerConstraint{};
-    int processesPerConstraintWithProcess{};
+    int processesPerInterval{};
+    int processesPerIntervalWithProcess{};
 
     int automations{};
     int mappings{};

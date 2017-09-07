@@ -8,7 +8,7 @@
 
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
-#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/State/StateModel.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
@@ -16,7 +16,7 @@ namespace Scenario
 {
 class TimeSyncModel;
 class EventModel;
-class ConstraintModel;
+class IntervalModel;
 class StateModel;
 class ProcessModel;
 }
@@ -38,7 +38,7 @@ QString name(const Object& obj)
             elt = ObjectIdentifier{"S", elt.id()};
         else if(elt.objectName() == Metadata<ObjectKey_k, Scenario::EventModel>::get())
             elt = ObjectIdentifier{"E", elt.id()};
-        else if(elt.objectName().contains("Constraint"))
+        else if(elt.objectName().contains("Interval"))
             elt = ObjectIdentifier{"C", elt.id()};
         else if(elt.objectName() == Metadata<ObjectKey_k, Scenario::TimeSyncModel>::get())
             elt = ObjectIdentifier{"T", elt.id()};
@@ -226,7 +226,7 @@ struct Rigid
     QString comment;
 };
 
-using Constraint = eggs::variant<Rigid, Flexible>;
+using Interval = eggs::variant<Rigid, Flexible>;
 
 struct ScenarioContent
 {
@@ -247,12 +247,12 @@ struct ScenarioContent
 struct TAScenario : public ScenarioContent
 {
     template<typename T>
-    TAScenario(const Scenario::ProcessModel& s, const T& constraint):
+    TAScenario(const Scenario::ProcessModel& s, const T& interval):
         iscore_scenario{s},
-        self{constraint},
-        event_s{constraint.event_s},
-        skip{constraint.skip},
-        kill{constraint.kill}
+        self{interval},
+        event_s{interval.event_s},
+        skip{interval.skip},
+        kill{interval.kill}
     {
         broadcasts.insert(event_s);
         broadcasts.insert(skip);
@@ -261,7 +261,7 @@ struct TAScenario : public ScenarioContent
 
     const Scenario::ProcessModel& iscore_scenario;
 
-    TA::Constraint self; // The scenario is considered similar to a constraint.
+    TA::Interval self; // The scenario is considered similar to a interval.
 
     const TA::BroadcastVariable event_s;// = "skip_S" + name(iscore_scenario);
     const TA::BroadcastVariable skip;// = "skip_S" + name(iscore_scenario);
@@ -272,8 +272,8 @@ struct TAVisitor
 {
     TA::TAScenario scenario;
     template<typename T>
-    TAVisitor(const Scenario::ProcessModel& s, const T& constraint):
-        scenario{s, constraint}
+    TAVisitor(const Scenario::ProcessModel& s, const T& interval):
+        scenario{s, interval}
     {
         visit(s);
     }
@@ -287,13 +287,13 @@ private:
     void visit(
             const Scenario::EventModel& event);
     void visit(
-            const Scenario::ConstraintModel& c);
+            const Scenario::IntervalModel& c);
     void visit(
             const Scenario::StateModel& state);
     void visit(
             const Scenario::ProcessModel& s);
 };
 
-QString makeScenario(const Scenario::ConstraintModel& s);
+QString makeScenario(const Scenario::IntervalModel& s);
 }
 }

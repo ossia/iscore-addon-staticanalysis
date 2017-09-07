@@ -1,6 +1,6 @@
 #include "TIKZConversion.hpp"
 #include <Scenario/Process/ScenarioModel.hpp>
-#include <Scenario/Document/Constraint/ConstraintModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <State/Expression.hpp>
@@ -34,27 +34,27 @@ QString makeTIKZ(QString name, Scenario::ProcessModel& scenario)
     texString += "\\draw (\\date,\\top + 1.5) node[scale=0.5]{\\nodeName};%\n%\n";
   }
 
-  for(auto &constraint : scenario.constraints)
+  for(auto &interval : scenario.intervals)
   {
-    QString constraintName = "C"+QString::number(constraint.id_val());
-    auto& endTn = Scenario::endTimeSync(constraint, scenario);
+    QString intervalName = "C"+QString::number(interval.id_val());
+    auto& endTn = Scenario::endTimeSync(interval, scenario);
 
-    auto yPos = -constraint.heightPercentage() * HEIGHT;
-    auto date = (int) constraint.startDate().sec();
+    auto yPos = -interval.heightPercentage() * HEIGHT;
+    auto date = (int) interval.startDate().sec();
     auto nom = int(endTn.date().sec()) - date;
     int min = nom;
-    if(constraint.duration.minDuration() != constraint.duration.defaultDuration())
-      min = (int)constraint.duration.minDuration().sec();
+    if(interval.duration.minDuration() != interval.duration.defaultDuration())
+      min = (int)interval.duration.minDuration().sec();
 
     auto max = nom;
-    if(constraint.duration.maxDuration() != constraint.duration.defaultDuration())
-      max = constraint.duration.isMaxInfinite()
-          ? (int)constraint.duration.defaultDuration().sec()+1
-          : (int)constraint.duration.maxDuration().sec();
+    if(interval.duration.maxDuration() != interval.duration.defaultDuration())
+      max = interval.duration.isMaxInfinite()
+          ? (int)interval.duration.defaultDuration().sec()+1
+          : (int)interval.duration.maxDuration().sec();
 
 
 
-    texString += "\\def\\contraintName{" + constraintName + "};%\n";
+    texString += "\\def\\contraintName{" + intervalName + "};%\n";
     texString += "\\def\\ypos{" + QString::number(yPos) + "};%\n";
     texString += "\\def\\date{" + QString::number(date) + "};\n";
     texString += "\\def\\min{" + QString::number(min) + "};%\n";
@@ -66,7 +66,7 @@ QString makeTIKZ(QString name, Scenario::ProcessModel& scenario)
     texString += "\\draw (\\date,\\ypos) -- ++(\\min,0) node[midway,above,scale=1] {\\contraintName};%\n";
     texString += "\\draw (\\date+\\min,\\ypos+0.5) -- ++(0,-1);%\n";
     texString += "\\draw[dotted] (\\date+\\min,\\ypos) -- (\\date+\\max,\\ypos);%\n";
-    if(!constraint.duration.isMaxInfinite())
+    if(!interval.duration.isMaxInfinite())
     {texString += "\\draw (\\date+\\max,\\ypos+0.5) -- ++(0,-1);%\n%\n";}
   }
   texString += "\\end{tikzpicture}%\n";
@@ -150,7 +150,7 @@ struct TIKZVisitor
       (*this)(node, r);
     }
 
-    for(const ConstraintModel& cst : scenario.constraints)
+    for(const IntervalModel& cst : scenario.intervals)
     {
       (*this)(cst, r);
     }
@@ -200,7 +200,7 @@ struct TIKZVisitor
     }
   }
 
-  void operator()(const Scenario::ConstraintModel& cst, QRectF r)
+  void operator()(const Scenario::IntervalModel& cst, QRectF r)
   {
     // Required data
     const auto x0 = cst.startDate().msec();
@@ -219,7 +219,7 @@ struct TIKZVisitor
     const QPointF tikz_max{r.x() + xMax * r.width(),  -r.y() + y * r.height()};
     const QPointF tikz_minArc{r.x() + xMin * r.width() + 0.24, -r.y() + y * r.height() + 0.153};
     const QPointF tikz_maxArc{r.x() + xMax * r.width() - 0.15, -r.y() + y * r.height() - 0.15};
-    // Drawing the constraint
+    // Drawing the interval
     if(rigid)
     {
       tikz += draw_full % point(tikz_origin) % " -- " % point(tikz_default) % endname(cst);
