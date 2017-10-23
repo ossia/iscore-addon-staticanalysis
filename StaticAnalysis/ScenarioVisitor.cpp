@@ -6,7 +6,7 @@
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 
-#include <iscore/actions/MenuManager.hpp>
+#include <score/actions/MenuManager.hpp>
 #include <QAction>
 #include <QChar>
 #include <QDebug>
@@ -22,11 +22,11 @@
 #include <State/Message.hpp>
 #include <State/Value.hpp>
 
-#include <iscore/document/DocumentInterface.hpp>
-#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
-#include <iscore/model/Identifier.hpp>
+#include <score/document/DocumentInterface.hpp>
+#include <score/plugins/application/GUIApplicationPlugin.hpp>
+#include <score/model/Identifier.hpp>
 #include <ossia/detail/algorithms.hpp>
-#include <iscore/actions/Menu.hpp>
+#include <score/actions/Menu.hpp>
 #include <core/document/Document.hpp>
 
 #include <QApplication>
@@ -40,10 +40,10 @@
 #include <StaticAnalysis/ScenarioGenerator.hpp>
 #include <StaticAnalysis/TIKZConversion.hpp>
 #include <StaticAnalysis/Statistics.hpp>
-#include <iscore/actions/ActionManager.hpp>
+#include <score/actions/ActionManager.hpp>
 
-stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& app):
-    iscore::GUIApplicationPlugin{app}
+stal::ApplicationPlugin::ApplicationPlugin(const score::GUIApplicationContext& app):
+    score::GUIApplicationPlugin{app}
 {
     m_himito = new QAction{tr("Generate scenario from Petri Net"), nullptr};
     connect(m_himito, &QAction::triggered, [&] () {
@@ -51,7 +51,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         auto doc = currentDocument();
         if(!doc)
             return;
-        Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+        Scenario::ScenarioDocumentModel& base = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
 
         const auto& baseInterval = base.baseScenario().interval();
         if(baseInterval.processes.size() == 0)
@@ -70,7 +70,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         auto doc = currentDocument();
         if(!doc)
             return;
-        Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+        Scenario::ScenarioDocumentModel& base = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
 
         const auto& baseInterval = base.baseScenario().interval();
         if(baseInterval.processes.size() == 0)
@@ -119,7 +119,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         auto doc = currentDocument();
         if(!doc)
             return;
-        Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+        Scenario::ScenarioDocumentModel& base = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
 
         QString text = TA::makeScenario(base.baseScenario().interval());
         Scenario::TextDialog dial(text, qApp->activeWindow());
@@ -138,7 +138,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         if(!doc)
             return;
 
-        Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+        Scenario::ScenarioDocumentModel& base = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
         auto& baseScenario = static_cast<Scenario::ProcessModel&>(*base.baseScenario().interval().processes.begin());
 
         using namespace stal::Metrics;
@@ -169,7 +169,7 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
         auto doc = currentDocument();
         if(!doc)
             return;
-        Scenario::ScenarioDocumentModel& base = iscore::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+        Scenario::ScenarioDocumentModel& base = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
         auto& baseScenario = static_cast<Scenario::ProcessModel&>(*base.baseScenario().interval().processes.begin());
 
         QFileDialog d{qApp->activeWindow(), tr("Save Document As")};
@@ -247,9 +247,9 @@ stal::ApplicationPlugin::ApplicationPlugin(const iscore::GUIApplicationContext& 
 
 }
 
-iscore::GUIElements stal::ApplicationPlugin::makeGUIElements()
+score::GUIElements stal::ApplicationPlugin::makeGUIElements()
 {
-    auto& m = context.menus.get().at(iscore::Menus::Export());
+    auto& m = context.menus.get().at(score::Menus::Export());
     QMenu* menu = m.menu();
     menu->addAction(m_himito);
     menu->addAction(m_generate);

@@ -192,7 +192,7 @@ static void print(const Event_ND& c, Stream& stream)
 static QString print(const ScenarioContent& c)
 {
     QFile f(":/model-uppaal.xml.in");
-    ISCORE_ASSERT(f.exists());
+    SCORE_ASSERT(f.exists());
     f.open(QFile::ReadOnly);
     QString str = f.readAll();
 
@@ -274,9 +274,9 @@ static void visitProcesses(
 
             for(const TA::Point& point : v.scenario.points)
             {
-                ISCORE_ASSERT(!point.event_s.isEmpty());
-                ISCORE_ASSERT(!point.event_e.isEmpty());
-                ISCORE_ASSERT(!point.skip_p.isEmpty());
+                SCORE_ASSERT(!point.event_s.isEmpty());
+                SCORE_ASSERT(!point.event_e.isEmpty());
+                SCORE_ASSERT(!point.skip_p.isEmpty());
             }
 
             insert(v.scenario, content);
@@ -400,7 +400,7 @@ void TAVisitor::visit(const Scenario::TimeSyncModel &timenode)
 
     // If there are multiple intervals ending on this timenode,
     // we put a Control inbetween.
-    auto prev_csts = previousIntervals(timenode, scenario.iscore_scenario);
+    auto prev_csts = previousIntervals(timenode, scenario.score_scenario);
     if(prev_csts.size() > 1)
     {
         QString control_name = "Control_" + tn_name;
@@ -436,7 +436,7 @@ void TAVisitor::visit(const Scenario::TimeSyncModel &timenode)
         scenario.broadcasts.insert(tn_point.event_e);
         scenario.broadcasts.insert(tn_point.event_s);
     }
-    else if(&timenode == &scenario.iscore_scenario.startTimeSync())
+    else if(&timenode == &scenario.score_scenario.startTimeSync())
     {
         tn_point.skip_p = scenario.skip;
         tn_point.event_s = scenario.event_s;
@@ -444,7 +444,7 @@ void TAVisitor::visit(const Scenario::TimeSyncModel &timenode)
     }
     else
     {
-        ISCORE_ABORT;
+        SCORE_ABORT;
     }
 
 
@@ -526,10 +526,10 @@ void TAVisitor::visit(const Scenario::TimeSyncModel &timenode)
 void TAVisitor::visit(const Scenario::EventModel &event)
 {
     using namespace Scenario;
-    const auto& timenode = parentTimeSync(event, scenario.iscore_scenario);
+    const auto& timenode = parentTimeSync(event, scenario.score_scenario);
     QString tn_name = name(timenode);
     auto it = ossia::find_if(scenario.points, [&] (const auto& point ) { return point.name == tn_name; });
-    ISCORE_ASSERT(it != scenario.points.end());
+    SCORE_ASSERT(it != scenario.points.end());
 
     const TA::Point& previous_timenode_point = *it;
     QString event_name = name(event);
@@ -624,12 +624,12 @@ void TAVisitor::visit(const Scenario::ProcessModel &s)
 void TAVisitor::visit(const Scenario::IntervalModel &c)
 {
     using namespace Scenario;
-    QString start_event_name = name(startEvent(c, scenario.iscore_scenario));
+    QString start_event_name = name(startEvent(c, scenario.score_scenario));
 
-    const TimeSyncModel& end_node = endTimeSync(c, scenario.iscore_scenario);
+    const TimeSyncModel& end_node = endTimeSync(c, scenario.score_scenario);
     QString end_node_name = name(end_node);
 
-    auto prev_csts = previousIntervals(end_node, scenario.iscore_scenario);
+    auto prev_csts = previousIntervals(end_node, scenario.score_scenario);
     QString event_e1;
     QString event_e2;
     QString skip;

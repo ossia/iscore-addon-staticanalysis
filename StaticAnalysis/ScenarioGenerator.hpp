@@ -1,5 +1,5 @@
 #pragma once
-#include <iscore/command/Dispatchers/CommandDispatcher.hpp>
+#include <score/command/Dispatchers/CommandDispatcher.hpp>
 
 namespace Scenario
 {

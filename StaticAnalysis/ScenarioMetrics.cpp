@@ -676,7 +676,7 @@ class ProgramVisitor
     private:
         void mark(const Id<Scenario::IntervalModel>& cid, Mark m)
         {
-            ISCORE_ASSERT(intervals.at(cid) == m || intervals.at(cid) == NoMark);
+            SCORE_ASSERT(intervals.at(cid) == m || intervals.at(cid) == NoMark);
             if(intervals.at(cid) == m)
             {
                 return;

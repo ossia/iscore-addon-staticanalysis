@@ -7,7 +7,7 @@
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
-#include <iscore/model/path/PathSerialization.hpp>
+#include <score/model/path/PathSerialization.hpp>
 #include <Loop/LoopProcessModel.hpp>
 
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
@@ -32,7 +32,7 @@
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Scenario/Commands/State/AddMessagesToState.hpp>
 
-#include <iscore/document/DocumentContext.hpp>
+#include <score/document/DocumentContext.hpp>
 #include <tuple>
 #include  <random>
 #include  <iterator>
@@ -90,7 +90,7 @@ class Place{
 
 static auto& createTree(
         CommandDispatcher<>& disp,
-        const iscore::DocumentContext& ctx)
+        const score::DocumentContext& ctx)
 {
     // Create a tree
     // Get necessary objects : OSC device factory, root node, etc.
@@ -347,7 +347,7 @@ void generateScenarioFromPetriNet(
     if (json.isEmpty()){ return; }
 
     // Create Device Tree
-    auto& device_tree = createTree(disp, iscore::IDocument::documentContext(scenario));
+    auto& device_tree = createTree(disp, score::IDocument::documentContext(scenario));
 
     // Load Transitions
     QJsonArray transitionsArray = json["transitions"].toArray();

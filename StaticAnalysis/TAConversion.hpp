@@ -2,7 +2,7 @@
 #include <QString>
 #include <sstream>
 #include <Process/TimeValue.hpp>
-#include <iscore/model/path/Path.hpp>
+#include <score/model/path/Path.hpp>
 #include <set>
 #include <eggs/variant.hpp>
 
@@ -248,7 +248,7 @@ struct TAScenario : public ScenarioContent
 {
     template<typename T>
     TAScenario(const Scenario::ProcessModel& s, const T& interval):
-        iscore_scenario{s},
+        score_scenario{s},
         self{interval},
         event_s{interval.event_s},
         skip{interval.skip},
@@ -259,13 +259,13 @@ struct TAScenario : public ScenarioContent
         broadcasts.insert(kill);
     }
 
-    const Scenario::ProcessModel& iscore_scenario;
+    const Scenario::ProcessModel& score_scenario;
 
     TA::Interval self; // The scenario is considered similar to a interval.
 
-    const TA::BroadcastVariable event_s;// = "skip_S" + name(iscore_scenario);
-    const TA::BroadcastVariable skip;// = "skip_S" + name(iscore_scenario);
-    const TA::BroadcastVariable kill;// = "kill_S" + name(iscore_scenario);
+    const TA::BroadcastVariable event_s;// = "skip_S" + name(score_scenario);
+    const TA::BroadcastVariable skip;// = "skip_S" + name(score_scenario);
+    const TA::BroadcastVariable kill;// = "kill_S" + name(score_scenario);
 };
 
 struct TAVisitor

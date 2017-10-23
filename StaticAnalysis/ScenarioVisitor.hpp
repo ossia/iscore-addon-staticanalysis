@@ -1,23 +1,23 @@
 #pragma once
-#include <iscore/plugins/application/GUIApplicationPlugin.hpp>
+#include <score/plugins/application/GUIApplicationPlugin.hpp>
 
 class QAction;
-namespace iscore {
+namespace score {
 
 class MenubarManager;
-}  // namespace iscore
+}  // namespace score
 // RENAMEME
 namespace stal
 {
 class ApplicationPlugin :
         public QObject,
-        public iscore::GUIApplicationPlugin
+        public score::GUIApplicationPlugin
 {
     public:
-        ApplicationPlugin(const iscore::GUIApplicationContext& app);
+        ApplicationPlugin(const score::GUIApplicationContext& app);
 
     private:
-        iscore::GUIElements makeGUIElements() override;
+        score::GUIElements makeGUIElements() override;
 
         QAction* m_himito{};
         QAction* m_generate{};

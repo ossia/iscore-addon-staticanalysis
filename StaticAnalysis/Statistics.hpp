@@ -139,7 +139,7 @@ struct DeviceStatistics
 
                     avg_ext_metadata += addr.extendedAttributes.size();
 
-                    ISCORE_ASSERT(addr.ioType);
+                    SCORE_ASSERT(addr.ioType);
                     {
                         switch(*addr.ioType)
                         {
