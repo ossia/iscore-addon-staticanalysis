@@ -245,12 +245,29 @@ stal::ApplicationPlugin::ApplicationPlugin(const score::GUIApplicationContext& a
       dial.exec();
     });
 
+    m_MLexport = new QAction{tr("To ML"), nullptr};
+    connect(m_MLexport, &QAction::triggered, [&] () {
+
+        auto doc = currentDocument();
+        if(!doc)
+            return;
+
+        Scenario::ScenarioDocumentModel& base = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+        auto& baseScenario = static_cast<Scenario::ProcessModel&>(*base.baseScenario().interval().processes.begin());
+
+        using namespace stal::Metrics;
+        // Language
+        QString str = toML(baseScenario);
+        Scenario::TextDialog dial(str, qApp->activeWindow());
+        dial.exec();
+    });
 }
 
 score::GUIElements stal::ApplicationPlugin::makeGUIElements()
 {
     auto& m = context.menus.get().at(score::Menus::Export());
     QMenu* menu = m.menu();
+    menu->addAction(m_MLexport);
     menu->addAction(m_himito);
     menu->addAction(m_generate);
     menu->addAction(m_convert);

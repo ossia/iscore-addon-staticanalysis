@@ -40,7 +40,7 @@ QString makeTIKZ(QString name, Scenario::ProcessModel& scenario)
     auto& endTn = Scenario::endTimeSync(interval, scenario);
 
     auto yPos = -interval.heightPercentage() * HEIGHT;
-    auto date = (int) interval.startDate().sec();
+    auto date = (int) interval.date().sec();
     auto nom = int(endTn.date().sec()) - date;
     int min = nom;
     if(interval.duration.minDuration() != interval.duration.defaultDuration())
@@ -203,7 +203,7 @@ struct TIKZVisitor
   void operator()(const Scenario::IntervalModel& cst, QRectF r)
   {
     // Required data
-    const auto x0 = cst.startDate().msec();
+    const auto x0 = cst.date().msec();
     const auto xDef = x0 + cst.duration.defaultDuration().msec();
     const auto xMid = x0 + cst.duration.defaultDuration().msec() / 2.;
     const auto xMin = x0 + cst.duration.minDuration().msec();

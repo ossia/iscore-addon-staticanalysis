@@ -77,5 +77,6 @@ inline double Complexity(const Factors& f)
 }
 
 QString toScenarioLanguage(const Scenario::ProcessModel& s);
+QString toML(const Scenario::ProcessModel& s);
 }
 }

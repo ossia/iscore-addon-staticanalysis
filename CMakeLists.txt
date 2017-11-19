@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.1)
-project(iscore_addon_staticanalysis LANGUAGES CXX)
+project(score_addon_staticanalysis LANGUAGES CXX)
 
-if(NOT TARGET iscore_plugin_engine)
+if(NOT TARGET score_plugin_engine)
     return()
 endif()
-iscore_common_setup()
+score_common_setup()
 
 # Files & main target
 set(HDRS
@@ -13,7 +13,7 @@ set(HDRS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioGenerator.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TAConversion.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TIKZConversion.hpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/iscore_plugin_staticanalysis.hpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/score_plugin_staticanalysis.hpp"
 )
 set(SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioMetrics.cpp"
@@ -21,14 +21,14 @@ set(SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioGenerator.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TAConversion.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TIKZConversion.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/iscore_plugin_staticanalysis.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/score_plugin_staticanalysis.cpp"
 )
 
 qt5_add_resources(QRCS "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/Resources/TAResources.qrc")
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS} ${QRCS})
 target_link_libraries(${PROJECT_NAME} PUBLIC
-    iscore_lib_base iscore_lib_process
-    iscore_plugin_scenario iscore_plugin_automation
-    iscore_plugin_loop iscore_plugin_engine)
+    score_lib_base score_lib_process
+    score_plugin_scenario score_plugin_automation
+    score_plugin_loop score_plugin_engine)
 
-setup_iscore_plugin(${PROJECT_NAME})
+setup_score_plugin(${PROJECT_NAME})
