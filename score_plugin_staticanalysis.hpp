@@ -5,13 +5,6 @@
 
 #include <score/plugins/application/GUIApplicationPlugin.hpp>
 
-namespace score {
-
-}  // namespace score
-
-namespace TA
-{
-}
 class score_addon_staticanalysis final:
         public QObject,
         public score::Plugin_QtInterface,
