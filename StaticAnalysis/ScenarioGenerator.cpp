@@ -232,7 +232,7 @@ static auto createPlace(
   auto& new_interval = scenario.interval(state_place_cmd->createdInterval());
   auto create_loop_cmd = new AddProcessToInterval(
               new_interval,
-              Metadata<ConcreteKey_k, Loop::ProcessModel>::get());
+                           Metadata<ConcreteKey_k, Loop::ProcessModel>::get(), {});
   disp.submitCommand(create_loop_cmd);
 
   // Create loop pattern
@@ -243,8 +243,7 @@ static auto createPlace(
   createTrigger(disp, loop, pattern_state, TimeVal::zero(), TimeVal::infinite());
 
   auto create_scenario_cmd = new AddProcessToInterval(
-              pattern,
-              Metadata<ConcreteKey_k, Scenario::ProcessModel>::get());
+              pattern, Metadata<ConcreteKey_k, Scenario::ProcessModel>::get(), {});
   disp.submitCommand(create_scenario_cmd);
 
   auto& scenario_pattern = static_cast<Scenario::ProcessModel&>(pattern.processes.at(create_scenario_cmd->processId()));
