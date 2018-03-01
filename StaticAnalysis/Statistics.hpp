@@ -1,30 +1,68 @@
 #pragma once
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
-#include <Scenario/Process/ScenarioInterface.hpp>
-
+#include <Scenario/Process/ScenarioModel.hpp>
+#include <Loop/LoopProcessModel.hpp>
 namespace stal
 {
 struct ScenarioStatistics
 {
-    int intervals{};
-    int events{};
-    int nodes{};
-    int empty_states{};
-    int states{};
+    int64_t intervals{};
+    int64_t empty_intervals{};
+    int64_t events{};
+    int64_t nodes{};
+    int64_t empty_states{};
+    int64_t states{};
 
-    int processes{};
-    int processesPerInterval{};
-    int processesPerIntervalWithProcess{};
+    int64_t conditions{};
+    int64_t triggers{};
 
-    int automations{};
-    int mappings{};
-    int scenarios{};
-    int loops{};
+    int64_t processes{};
+    double processesPerInterval{};
+    double processesPerIntervalWithProcess{};
 
-    ScenarioStatistics(const Scenario::ScenarioInterface& scenar)
-    {
+    int64_t automations{};
+    int64_t interpolations{};
+    int64_t mappings{};
+    int64_t scenarios{};
+    int64_t scripts{};
+    int64_t loops{};
+    int64_t other{};
 
-    }
+    ScenarioStatistics(const Scenario::ProcessModel& scenar);
+};
+
+struct GlobalStatistics
+{
+  int64_t intervals{};
+  int64_t empty_intervals{};
+  int64_t events{};
+  int64_t nodes{};
+  int64_t empty_states{};
+  int64_t states{};
+
+  int64_t conditions{};
+  int64_t triggers{};
+
+  int64_t processes{};
+  double processesPerInterval{};
+  double processesPerIntervalWithProcess{};
+
+  int64_t automations{};
+  int64_t interpolations{};
+  int64_t mappings{};
+  int64_t scenarios{};
+  int64_t scripts{};
+  int64_t loops{};
+  int64_t other{};
+
+  int64_t maxDepth{};
+  int64_t curDepth{};
+
+
+  GlobalStatistics(const Scenario::IntervalModel& scenar);
+  void visit(const Scenario::ProcessModel& scenar);
+  void visit(const Loop::ProcessModel& scenar);
+  void visit(const Scenario::IntervalModel& scenar);
 };
 
 struct DeviceStatistics

@@ -19,6 +19,7 @@ set(SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioMetrics.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioVisitor.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioGenerator.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/Statistics.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TAConversion.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TIKZConversion.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/score_plugin_staticanalysis.cpp"
@@ -29,6 +30,6 @@ add_library(${PROJECT_NAME} ${SRCS} ${HDRS} ${QRCS})
 target_link_libraries(${PROJECT_NAME} PUBLIC
     score_lib_base score_lib_process
     score_plugin_scenario score_plugin_automation
-    score_plugin_loop score_plugin_engine)
+    score_plugin_loop score_plugin_engine score_plugin_js)
 
 setup_score_plugin(${PROJECT_NAME})

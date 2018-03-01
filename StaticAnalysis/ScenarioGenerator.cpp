@@ -263,7 +263,7 @@ void addConditionTrigger(
     using namespace Scenario::Command;
 
     QList<QString> condition;
-    foreach (QString atom, tList){
+    Q_FOREACH (QString atom, tList){
         condition << "local:/" + atom + "==1";
     }
     QString expression = condition.join(" or ");
@@ -306,7 +306,7 @@ static QList<QString> JsonArrayToStringList(
         QJsonArray list)
 {
     QList<QString> output;
-    foreach(QJsonValue s, list){
+    Q_FOREACH(QJsonValue s, list){
         output << s.toString();
     }
     return output;
@@ -384,7 +384,7 @@ void generateScenarioFromPetriNet(
 
     // create loops for each place
     double pos_y = 0.05;
-    foreach (Place p, pList) {
+    Q_FOREACH (Place p, pList) {
         if (!(p.pre.empty() || p.pos.empty())){
 
           auto place = createPlace(disp, scenario, state_initial_transition, pos_y);
@@ -398,13 +398,13 @@ void generateScenarioFromPetriNet(
           auto& state_place = createTransition(disp, scenario_place, place_start_state,  TimeVal::zero(), TimeVal::infinite(), 0.4);
 
           // Add pre transitions of the place
-          foreach (QString t, p.pre){
+          Q_FOREACH (QString t, p.pre){
               addMessageToState(disp, state_place, "local", t, false);
           }
 
           // Add post transitions of the place
           double pos_t = 0.8;
-          foreach (QString t, p.pos){
+          Q_FOREACH (QString t, p.pos){
               auto& state_transition = createTransition(disp, scenario_place, state_place, t_min, t_max, pos_t);
 
               addMessageToState(disp, state_transition, "local", t, true);

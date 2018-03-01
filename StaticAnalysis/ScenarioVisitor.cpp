@@ -204,42 +204,80 @@ stal::ApplicationPlugin::ApplicationPlugin(const score::GUIApplicationContext& a
     m_statistics = new QAction{tr("Statistics"), nullptr};
     connect(m_statistics, &QAction::triggered, [&] () {
       auto doc = currentDocument();
+      Scenario::ScenarioDocumentModel& base = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
       ExplorerStatistics e{doc->context().plugin<Explorer::DeviceDocumentPlugin>()};
+      GlobalStatistics g{base.baseInterval()};
 
       QString str;
       str += "Devices\n=======\n\n";
+      str += "Device Nodes NonLeaf MaxDepth MaxCld AvgCld AvgNCld\n";
       for(const DeviceStatistics& dev : e.devices)
       {
-        str += "Device: " + dev.name + "\n";
-        str += "Nodes    :\t" + QString::number(dev.nodes) + "\n";
-        str += "NonLeaf  :\t" + QString::number(dev.non_leaf_nodes) + "\n";
-        str += "MaxDepth :\t" + QString::number(dev.max_depth) + "\n";
-        str += "MaxCld   :\t" + QString::number(dev.max_child_count) + "\n";
-        str += "AvgCld   :\t" + QString::number(dev.avg_child_count) + "\n";
-        str += "AvgNLCld :\t" + QString::number(dev.avg_non_leaf_child_count) + "\n";
-        str += "\n";
 
-        str += "Empty    :\t" + QString::number(dev.containers) + "\n";
-        str += "Int      :\t" + QString::number(dev.int_addr) + "\n";
-        str += "Impulse  :\t" + QString::number(dev.impulse_addr) + "\n";
-        str += "Float    :\t" + QString::number(dev.float_addr) + "\n";
-        str += "Bool     :\t" + QString::number(dev.bool_addr) + "\n";
-        str += "Vec2F    :\t" + QString::number(dev.vec2f_addr) + "\n";
-        str += "Vec3F    :\t" + QString::number(dev.vec3f_addr) + "\n";
-        str += "Vec4F    :\t" + QString::number(dev.vec4f_addr) + "\n";
-        str += "Tuple    :\t" + QString::number(dev.tuple_addr) + "\n";
-        str += "String   :\t" + QString::number(dev.string_addr) + "\n";
-        str += "Char     :\t" + QString::number(dev.char_addr) + "\n";
+        str += dev.name + " ";
+        str += QString::number(dev.nodes) + " ";
+        str += QString::number(dev.non_leaf_nodes) + " ";
+        str += QString::number(dev.max_depth) + " ";
+        str += QString::number(dev.max_child_count) + " ";
+        str += QString::number(dev.avg_child_count) + " ";
+        str += QString::number(dev.avg_non_leaf_child_count) + " ";
         str += "\n";
+      }
 
+      str += "\n\n";
+      str += "Device Empty Int Impulse Float Bool Vec2F Vec3F Vec4F Tuple String Char\n";
+      for(const DeviceStatistics& dev : e.devices)
+      {
+        str += dev.name + " ";
+        str += QString::number(dev.containers)   + " ";
+        str += QString::number(dev.int_addr)     + " ";
+        str += QString::number(dev.impulse_addr) + " ";
+        str += QString::number(dev.float_addr)   + " ";
+        str += QString::number(dev.bool_addr)    + " ";
+        str += QString::number(dev.vec2f_addr)   + " ";
+        str += QString::number(dev.vec3f_addr)   + " ";
+        str += QString::number(dev.vec4f_addr)   + " ";
+        str += QString::number(dev.tuple_addr)   + " ";
+        str += QString::number(dev.string_addr)  + " ";
+        str += QString::number(dev.char_addr)    + " ";
+        str += "\n";
+/*
         str += "Get      :\t" + QString::number(dev.num_get) + "\n";
         str += "Set      :\t" + QString::number(dev.num_set) + "\n";
         str += "Bi       :\t" + QString::number(dev.num_bi) + "\n";
         str += "\n";
 
         str += "AMetadata:\t" + QString::number(dev.avg_ext_metadata) + "\n";
-        str += "\n\n";
+        */
       }
+
+      str += "\n\n";
+      str += "Score\n=======\n\n";
+      str += "Intervals EmptyItv IC TC States EmptyStates Conds Trigs MaxDepth\n";
+      str += QString::number(g.intervals) + " ";
+      str += QString::number(g.empty_intervals) + " ";
+      str += QString::number(g.events) + " ";
+      str += QString::number(g.nodes) + " ";
+      str += QString::number(g.states) + " ";
+      str += QString::number(g.empty_states) + " ";
+      str += QString::number(g.conditions) + " ";
+      str += QString::number(g.triggers) + " ";
+      str += QString::number(g.maxDepth) + " ";
+
+      str += "\n\n";
+      str += "Processes\n=======\n\n";
+      str += "Procs ProcsPerItv ProcsPerLoadedItv Autom Mapping Scenar Loop Script Other\n";
+      str += QString::number(g.processes) + " ";
+      str += QString::number(g.processesPerInterval) + " ";
+      str += QString::number(g.processesPerIntervalWithProcess) + " ";
+      str += QString::number(g.automations + g.interpolations) + " ";
+      str += QString::number(g.mappings) + " ";
+      str += QString::number(g.scenarios) + " ";
+      str += QString::number(g.loops) + " ";
+      str += QString::number(g.scripts) + " ";
+      str += QString::number(g.other) + " ";
+
+      str += "\n\n";
 
       Scenario::TextDialog dial(str, qApp->activeWindow());
       dial.exec();
