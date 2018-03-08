@@ -27,6 +27,8 @@ set(SRCS
 
 qt5_add_resources(QRCS "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/Resources/TAResources.qrc")
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS} ${QRCS})
+
+score_moc_headers(${PROJECT_NAME} "${HDRS}")
 target_link_libraries(${PROJECT_NAME} PUBLIC
     score_lib_base score_lib_process
     score_plugin_scenario score_plugin_automation
