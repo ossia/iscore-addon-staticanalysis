@@ -25,9 +25,9 @@
 #include <Scenario/Commands/TimeSync/SetTrigger.hpp>
 #include <Explorer/Commands/Add/AddDevice.hpp>
 #include <Explorer/Commands/Add/AddAddress.hpp>
-#include <Engine/Protocols/OSC/OSCSpecificSettings.hpp>
-#include <Engine/Protocols/OSC/OSCProtocolFactory.hpp>
-#include <Engine/Protocols/OSC/OSCDevice.hpp>
+#include <Protocols/OSC/OSCSpecificSettings.hpp>
+#include <Protocols/OSC/OSCProtocolFactory.hpp>
+#include <Protocols/OSC/OSCDevice.hpp>
 #include <Device/Protocol/ProtocolList.hpp>
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Scenario/Commands/State/AddMessagesToState.hpp>
@@ -62,8 +62,8 @@ struct random_selector
         }
 
         //convenience function that works on anything with a sensible begin() and end(), and returns with a ref to the value type
-        template <typename Container> auto operator()(const Container& c) -> decltype(*begin(c))& {
-            return *select(begin(c), end(c));
+        template <typename Container> auto operator()(const Container& c) -> decltype(*begin(c).value().first)& {
+            return *select(begin(c), end(c)).value().first;
         }
 
     private:
@@ -447,7 +447,7 @@ void generateScenario(
             case 0:
             {
                 // Get a random state to start from;
-                StateModel& state = *selector(scenar.states.get());
+                StateModel& state = selector(scenar.states.get());
                 if(!state.nextInterval())
                 {
                     const TimeSyncModel& parentNode = parentTimeSync(state, scenar);
@@ -459,7 +459,7 @@ void generateScenario(
             }
             case 1:
             {
-                EventModel& event = *selector(scenar.events.get());
+                EventModel& event = selector(scenar.events.get());
                 disp.submitCommand(new Command::CreateState(scenar, event.id(), y));
 
                 break;
@@ -470,8 +470,8 @@ void generateScenario(
     }
     for(int i = 0; i < N/3; i++)
     {
-        StateModel& state1 = *selector(scenar.states.get());
-        StateModel& state2 = *selector(scenar.states.get());
+        StateModel& state1 = selector(scenar.states.get());
+        StateModel& state2 = selector(scenar.states.get());
         auto& tn1 = Scenario::parentTimeSync(state1, scenar);
         auto t1 = tn1.date();
         auto& tn2 = Scenario::parentTimeSync(state2, scenar);
@@ -489,7 +489,7 @@ void generateScenario(
     }
     for(auto i = 0; i < N/5; i++)
     {
-        StateModel& state1 = *selector(scenar.states.get());
+        StateModel& state1 = selector(scenar.states.get());
         auto& tn1 = Scenario::parentTimeSync(state1, scenar);
 
         if(tn1.active())

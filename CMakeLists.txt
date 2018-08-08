@@ -13,7 +13,7 @@ set(HDRS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioGenerator.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TAConversion.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TIKZConversion.hpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/score_plugin_staticanalysis.hpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/score_addon_staticanalysis.hpp"
 )
 set(SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ScenarioMetrics.cpp"
@@ -22,13 +22,12 @@ set(SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/Statistics.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TAConversion.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TIKZConversion.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/score_plugin_staticanalysis.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/score_addon_staticanalysis.cpp"
 )
 
 qt5_add_resources(QRCS "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/Resources/TAResources.qrc")
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS} ${QRCS})
 
-score_moc_headers(${PROJECT_NAME} "${HDRS}")
 target_link_libraries(${PROJECT_NAME} PUBLIC
     score_lib_base score_lib_process
     score_plugin_scenario score_plugin_automation

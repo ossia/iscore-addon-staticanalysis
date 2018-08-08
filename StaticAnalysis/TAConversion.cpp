@@ -4,6 +4,7 @@
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <ossia/detail/algorithms.hpp>
+#include <ossia/network/value/value_conversion.hpp>
 
 #include <QFile>
 namespace stal
@@ -44,7 +45,7 @@ static void set_point_condition(Point& point, const State::Expression& e)
             {
                 point.condition = to_operator(r.op);
 
-                auto val = State::convert::value<int>(*val_ptr);
+                auto val = ossia::convert<int>(*val_ptr);
                 point.conditionValue = val;
             }
         }
