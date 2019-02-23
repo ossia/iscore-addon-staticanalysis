@@ -7,13 +7,12 @@ class ProcessModel;
 }
 namespace stal
 {
-    void generateScenario(
-            const Scenario::ProcessModel& scenar,
-            int N,
-            CommandDispatcher<>&);
+void generateScenario(
+    const Scenario::ProcessModel& scenar,
+    int N,
+    CommandDispatcher<>&);
 
-    void generateScenarioFromPetriNet(
-            const Scenario::ProcessModel& scenario,
-            CommandDispatcher<>& disp
-            );
+void generateScenarioFromPetriNet(
+    const Scenario::ProcessModel& scenario,
+    CommandDispatcher<>& disp);
 }

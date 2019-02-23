@@ -1,5 +1,6 @@
-#include <StaticAnalysis/ScenarioVisitor.hpp>
 #include "score_addon_staticanalysis.hpp"
+
+#include <StaticAnalysis/ScenarioVisitor.hpp>
 
 score_addon_staticanalysis::score_addon_staticanalysis()
 {
@@ -8,10 +9,11 @@ score_addon_staticanalysis::score_addon_staticanalysis()
 #endif
 }
 
-score::GUIApplicationPlugin* score_addon_staticanalysis::make_guiApplicationPlugin(
-        const score::GUIApplicationContext& app)
+score::GUIApplicationPlugin*
+score_addon_staticanalysis::make_guiApplicationPlugin(
+    const score::GUIApplicationContext& app)
 {
-    return new stal::ApplicationPlugin{app};
+  return new stal::ApplicationPlugin{app};
 }
 
 #include <score/plugins/PluginInstances.hpp>

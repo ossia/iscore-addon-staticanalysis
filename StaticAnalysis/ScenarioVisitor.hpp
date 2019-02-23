@@ -2,30 +2,28 @@
 #include <score/plugins/application/GUIApplicationPlugin.hpp>
 
 class QAction;
-namespace score {
+namespace score
+{
 
 class MenubarManager;
-}  // namespace score
+} // namespace score
 // RENAMEME
 namespace stal
 {
-class ApplicationPlugin :
-        public QObject,
-        public score::GUIApplicationPlugin
+class ApplicationPlugin : public QObject, public score::GUIApplicationPlugin
 {
-    public:
-        ApplicationPlugin(const score::GUIApplicationContext& app);
+public:
+  ApplicationPlugin(const score::GUIApplicationContext& app);
 
-    private:
-        score::GUIElements makeGUIElements() override;
+private:
+  score::GUIElements makeGUIElements() override;
 
-        QAction* m_himito{};
-        QAction* m_generate{};
-        QAction* m_convert{};
-        QAction* m_metrics{};
-        QAction* m_MLexport{};
-        QAction* m_TIKZexport{};
-        QAction* m_statistics{};
-
+  QAction* m_himito{};
+  QAction* m_generate{};
+  QAction* m_convert{};
+  QAction* m_metrics{};
+  QAction* m_MLexport{};
+  QAction* m_TIKZexport{};
+  QAction* m_statistics{};
 };
 }
