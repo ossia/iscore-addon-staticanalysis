@@ -96,7 +96,7 @@ static auto& createTree(
     // Get necessary objects : OSC device factory, root node, etc.
     auto settings_factory = ctx.app.components
             .interfaces<Device::ProtocolFactoryList>()
-            .get(Engine::Network::OSCProtocolFactory::static_concreteKey());
+            .get(Protocols::OSCProtocolFactory::static_concreteKey());
 
     auto& tree = ctx.plugin<Explorer::DeviceDocumentPlugin>();
 
@@ -104,7 +104,7 @@ static auto& createTree(
     auto settings = settings_factory->defaultSettings();
     settings.name = "local";
     auto create_dev_cmd = new Explorer::Command::AddDevice(tree, settings);
-    disp.submitCommand(create_dev_cmd);
+    disp.submit(create_dev_cmd);
 
     return tree;
 }
@@ -134,7 +134,7 @@ auto createTreeNode(
                 InsertMode::AsChild,
                 theNode);
 
-    disp.submitCommand(create_addr_cmd);
+    disp.submit(create_addr_cmd);
 }
 
 template<typename Val>
@@ -157,7 +157,7 @@ auto addMessageToState(
                   }
                 });
 
-    disp.submitCommand(cmd);
+    disp.submit(cmd);
 }
 
 static auto createInterval(
@@ -174,7 +174,7 @@ static auto createInterval(
 
   // Create the synchronized event
   auto new_state_cmd = new CreateState(scenario, Scenario::parentEvent(startState, scenario).id(), posY);
-  disp.submitCommand(new_state_cmd);
+  disp.submit(new_state_cmd);
   auto& new_state = scenario.state(new_state_cmd->createdState());
 
   auto state_command = new CreateInterval_State_Event_TimeSync(
@@ -182,7 +182,7 @@ static auto createInterval(
               new_state.id(),             // start state id
               Scenario::parentEvent(new_state, scenario).date() + TimeVal::fromMsecs(duration), // duration
               posY);                       // y-pos in %
-  disp.submitCommand(state_command);
+  disp.submit(state_command);
 
   return state_command;
 }
@@ -202,15 +202,15 @@ void createTrigger(
   // Create the trigger point
   auto& timenode = parentTimeSync(state, scenario);
   auto trigger_command = new AddTrigger<Scenario_T>(timenode);
-  disp.submitCommand(trigger_command);
+  disp.submit(trigger_command);
 
    // Change Minimum Duration
    auto set_min_cmd = new SetMinDuration(scenario.interval(*state.previousInterval()), min_duration, min_duration.isZero());
-   disp.submitCommand(set_min_cmd);
+   disp.submit(set_min_cmd);
 
    // Change Maximum Duration
    auto set_max_cmd = new SetMaxDuration(scenario.interval(*state.previousInterval()), max_duration, max_duration.isInfinite());
-   disp.submitCommand(set_max_cmd);
+   disp.submit(set_max_cmd);
 }
 
 static auto createPlace(
@@ -233,7 +233,7 @@ static auto createPlace(
   auto create_loop_cmd = new AddProcessToInterval(
               new_interval,
                            Metadata<ConcreteKey_k, Loop::ProcessModel>::get(), {});
-  disp.submitCommand(create_loop_cmd);
+  disp.submit(create_loop_cmd);
 
   // Create loop pattern
   auto& loop = dynamic_cast<Loop::ProcessModel&>(new_interval.processes.at(create_loop_cmd->processId()));
@@ -244,7 +244,7 @@ static auto createPlace(
 
   auto create_scenario_cmd = new AddProcessToInterval(
               pattern, Metadata<ConcreteKey_k, Scenario::ProcessModel>::get(), {});
-  disp.submitCommand(create_scenario_cmd);
+  disp.submit(create_scenario_cmd);
 
   auto& scenario_pattern = static_cast<Scenario::ProcessModel&>(pattern.processes.at(create_scenario_cmd->processId()));
 
@@ -275,7 +275,7 @@ void addConditionTrigger(
         // 4. Set the expression to the trigger
         auto& timenode = parentTimeSync(state, scenario);
         auto expr_command = new SetTrigger(timenode, *maybe_parsed_expression);
-        disp.submitCommand(expr_command);
+        disp.submit(expr_command);
     }
 }
 
@@ -434,7 +434,7 @@ void generateScenario(
         CommandDispatcher<>& disp)
 {
     using namespace Scenario;
-    disp.submitCommand(new Command::CreateState(scenar, scenar.startEvent().id(), 0.5));
+    disp.submit(new Command::CreateState(scenar, scenar.startEvent().id(), 0.5));
 
     random_selector<> selector{};
 
@@ -453,14 +453,14 @@ void generateScenario(
                     const TimeSyncModel& parentNode = parentTimeSync(state, scenar);
                     Id<StateModel> state_id = state.id();
                     TimeVal t = TimeVal::fromMsecs(rand() % 20000) + parentNode.date();
-                    disp.submitCommand(new Command::CreateInterval_State_Event_TimeSync(scenar, state_id, t, state.heightPercentage()));
+                    disp.submit(new Command::CreateInterval_State_Event_TimeSync(scenar, state_id, t, state.heightPercentage()));
                 }
                 break;
             }
             case 1:
             {
                 EventModel& event = selector(scenar.events.get());
-                disp.submitCommand(new Command::CreateState(scenar, event.id(), y));
+                disp.submit(new Command::CreateState(scenar, event.id(), y));
 
                 break;
             }
@@ -479,12 +479,12 @@ void generateScenario(
         if(t1 < t2)
         {
             if(!state2.previousInterval() && !state1.nextInterval())
-                disp.submitCommand(new Command::CreateInterval(scenar, state1.id(), state2.id()));
+                disp.submit(new Command::CreateInterval(scenar, state1.id(), state2.id()));
         }
         else if (t1 > t2)
         {
             if(!state1.previousInterval() && !state2.nextInterval())
-                disp.submitCommand(new Command::CreateInterval(scenar, state2.id(), state1.id()));
+                disp.submit(new Command::CreateInterval(scenar, state2.id(), state1.id()));
         }
     }
     for(auto i = 0; i < N/5; i++)
@@ -494,7 +494,7 @@ void generateScenario(
 
         if(tn1.active())
             continue;
-        disp.submitCommand(new Command::AddTrigger<ProcessModel>(tn1));
+        disp.submit(new Command::AddTrigger<ProcessModel>(tn1));
     }
 }
 }

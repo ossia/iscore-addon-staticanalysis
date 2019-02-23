@@ -140,7 +140,7 @@ struct DeviceStatistics
                 const Device::AddressSettings& addr = child.get<Device::AddressSettings>();
                 if(addr.value.valid())
                 {
-                    switch(addr.value.getType())
+                    switch(addr.value.get_type())
                     {
                     case ossia::val_type::NONE: break;
                     case ossia::val_type::INT: int_addr++; break;
@@ -156,7 +156,7 @@ struct DeviceStatistics
                             if(tpl.size() > max_tuple_size)
                                 max_tuple_size = tpl.size();
                             avg_tuple_size += tpl.size();
-                            if(ossia::all_of(tpl, [] (const auto& v) { return v.getType() == ossia::val_type::FLOAT; }))
+                            if(ossia::all_of(tpl, [] (const auto& v) { return v.get_type() == ossia::val_type::FLOAT; }))
                             {
                                 switch(tpl.size())
                                 {
