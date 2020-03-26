@@ -31,6 +31,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QFileDialog>
+#include <QMenu>
 #include <QJsonDocument>
 #include <QSaveFile>
 #include <QString>

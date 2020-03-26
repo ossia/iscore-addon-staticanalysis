@@ -7,10 +7,19 @@
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <State/Expression.hpp>
 
+#include <QDebug>
 #include <QStringBuilder>
 
 namespace stal
 {
+Scenario::VerticalExtent extent(const Scenario::TimeSyncModel& sync)
+{
+  return {0., 1.};
+}
+Scenario::VerticalExtent extent(const Scenario::EventModel& sync)
+{
+  return {0., 1.};
+}
 QString makeTIKZ(QString name, Scenario::ProcessModel& scenario)
 {
   int HEIGHT = 75;
@@ -29,8 +38,8 @@ QString makeTIKZ(QString name, Scenario::ProcessModel& scenario)
 
     texString += "\\def\\nodeName{" + nodeName + "};%\n";
     texString += "\\def\\bottom{"
-                 + QString::number(-node.extent().bottom() * HEIGHT) + "};%\n";
-    texString += "\\def\\top{" + QString::number(-node.extent().top() * HEIGHT)
+                 + QString::number(-extent(node).bottom() * HEIGHT) + "};%\n";
+    texString += "\\def\\top{" + QString::number(-extent(node).top() * HEIGHT)
                  + "};%\n";
     texString += "\\draw (\\date,\\top) -- ++(-1,0.5) -- ++(0,2) -- ++(2,0) -- ++(0,-2) -- ++(-1,-0.5) -- (\\date, \\bottom);%\n";
     texString
@@ -191,7 +200,7 @@ struct TIKZVisitor
   void operator()(const Scenario::TimeSyncModel& node, QRectF r)
   {
     const auto x = node.date().msec();
-    const auto y = node.extent();
+    const auto y = extent(node);
 
     tikz
         += draw_full
@@ -343,7 +352,7 @@ struct TIKZVisitor
   {
     if (!State::isTrueExpression(ev.condition().toString()))
     {
-      auto y = ev.extent();
+      auto y = extent(ev);
       auto x = parentTimeSync(ev, scenario).date().msec();
 
       double ev_x = r.x() + x * r.width() - 0.2;
