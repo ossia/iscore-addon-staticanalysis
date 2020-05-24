@@ -147,7 +147,7 @@ struct TIKZVisitor
     return QRectF(0, 0, width, height);
   }
 
-  void operator()(Scenario::ProcessModel& scenario, optional<QRectF> root)
+  void operator()(Scenario::ProcessModel& scenario, std::optional<QRectF> root)
   {
     using namespace Scenario;
 
@@ -373,7 +373,7 @@ struct TIKZVisitor
 QString makeTIKZ2(QString name, Scenario::ProcessModel& scenario)
 {
   TIKZVisitor v;
-  v(scenario, ossia::none);
+  v(scenario, std::nullopt);
   return v.tikz;
 }
 

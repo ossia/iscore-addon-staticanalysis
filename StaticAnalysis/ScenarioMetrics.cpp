@@ -328,7 +328,7 @@ public:
     {
       s += "[";
       s += QString::number(c.duration.minDuration().msec()) + "; ";
-      if (c.duration.maxDuration().isInfinite())
+      if (c.duration.maxDuration().infinite())
       {
         s += "oo";
       }

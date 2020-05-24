@@ -30,6 +30,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QJsonArray>
+#include <QJsonObject>
 #include <QJsonDocument>
 
 #include <iterator>
@@ -183,7 +184,8 @@ static auto createInterval(
       new_state.id(), // start state id
       Scenario::parentEvent(new_state, scenario).date()
           + TimeVal::fromMsecs(duration), // duration
-      posY);                              // y-pos in %
+      posY,
+      false);                              // y-pos in %
   disp.submit(state_command);
 
   return state_command;
@@ -205,18 +207,19 @@ void createTrigger(
   auto trigger_command = new AddTrigger<Scenario_T>(timenode);
   disp.submit(trigger_command);
 
+  using namespace ossia;
   // Change Minimum Duration
   auto set_min_cmd = new SetMinDuration(
       scenario.interval(*state.previousInterval()),
       min_duration,
-      min_duration.isZero());
+      min_duration == 0_tv);
   disp.submit(set_min_cmd);
 
   // Change Maximum Duration
   auto set_max_cmd = new SetMaxDuration(
       scenario.interval(*state.previousInterval()),
       max_duration,
-      max_duration.isInfinite());
+      max_duration.infinite());
   disp.submit(set_max_cmd);
 }
 
@@ -234,7 +237,7 @@ static auto createPlace(
       = createInterval(disp, scenario, startState, 12000, posY);
   auto& loop_state = scenario.state(state_place_cmd->createdState());
   createTrigger(
-      disp, scenario, loop_state, TimeVal::zero(), TimeVal::infinite());
+      disp, scenario, loop_state, ossia::Zero, ossia::Infinite);
 
   // Create the loop
   auto& new_interval = scenario.interval(state_place_cmd->createdInterval());
@@ -249,7 +252,7 @@ static auto createPlace(
 
   auto& pattern_state = loop.state(pattern.endState());
   createTrigger(
-      disp, loop, pattern_state, TimeVal::zero(), TimeVal::infinite());
+      disp, loop, pattern_state, ossia::Zero, ossia::Infinite);
 
   auto create_scenario_cmd = new AddProcessToInterval(
       pattern, Metadata<ConcreteKey_k, Scenario::ProcessModel>::get(), {}, {});
@@ -423,8 +426,8 @@ void generateScenarioFromPetriNet(
           disp,
           scenario_place,
           place_start_state,
-          TimeVal::zero(),
-          TimeVal::infinite(),
+          ossia::Zero,
+          ossia::Infinite,
           0.4);
 
       // Add pre transitions of the place
@@ -487,7 +490,7 @@ void generateScenario(
           Id<StateModel> state_id = state.id();
           TimeVal t = TimeVal::fromMsecs(rand() % 20000) + parentNode.date();
           disp.submit(new Command::CreateInterval_State_Event_TimeSync(
-              scenar, state_id, t, state.heightPercentage()));
+              scenar, state_id, t, state.heightPercentage(), false));
         }
         break;
       }
