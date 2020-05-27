@@ -36,6 +36,7 @@
 #include <QSaveFile>
 #include <QString>
 
+#include <StaticAnalysis/CppGenerator.hpp>
 #include <StaticAnalysis/ScenarioGenerator.hpp>
 #include <StaticAnalysis/ScenarioMetrics.hpp>
 #include <StaticAnalysis/ScenarioVisitor.hpp>
@@ -315,6 +316,23 @@ stal::ApplicationPlugin::ApplicationPlugin(
     Scenario::TextDialog dial(str, qApp->activeWindow());
     dial.exec();
   });
+  m_CPPexport = new QAction{tr("To ossia"), nullptr};
+  connect(m_CPPexport, &QAction::triggered, [&]() {
+    auto doc = currentDocument();
+    if (!doc)
+      return;
+
+    Scenario::ScenarioDocumentModel& base
+        = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+    auto& baseScenario = static_cast<Scenario::ProcessModel&>(
+        *base.baseScenario().interval().processes.begin());
+
+    using namespace stal::Metrics;
+    // Language
+    QString str = toCPP(baseScenario);
+    Scenario::TextDialog dial(str, qApp->activeWindow());
+    dial.exec();
+  });
 }
 
 score::GUIElements stal::ApplicationPlugin::makeGUIElements()
@@ -322,6 +340,7 @@ score::GUIElements stal::ApplicationPlugin::makeGUIElements()
   auto& m = context.menus.get().at(score::Menus::Export());
   QMenu* menu = m.menu();
   menu->addAction(m_MLexport);
+  menu->addAction(m_CPPexport);
   menu->addAction(m_himito);
   menu->addAction(m_generate);
   menu->addAction(m_convert);
