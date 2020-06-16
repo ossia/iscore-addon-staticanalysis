@@ -32,6 +32,6 @@ add_library(${PROJECT_NAME} ${SRCS} ${HDRS} ${QRCS})
 target_link_libraries(${PROJECT_NAME} PUBLIC
     score_lib_base score_lib_process
     score_plugin_scenario score_plugin_automation
-    score_plugin_loop score_plugin_engine score_plugin_js score_plugin_mapping)
+    score_plugin_engine score_plugin_js score_plugin_mapping)
 
 setup_score_plugin(${PROJECT_NAME})

@@ -2,7 +2,6 @@
 
 #include <Automation/AutomationModel.hpp>
 #include <JS/JSProcessModel.hpp>
-#include <Loop/LoopProcessModel.hpp>
 #include <Mapping/MappingModel.hpp>
 
 #include <Interpolation/InterpolationProcess.hpp>
@@ -33,8 +32,6 @@ ScenarioStatistics::ScenarioStatistics(const Scenario::ProcessModel& scenar)
           mappings++;
         else if (dynamic_cast<Scenario::ProcessModel*>(&proc))
           scenarios++;
-        else if (dynamic_cast<Loop::ProcessModel*>(&proc))
-          loops++;
         else if (dynamic_cast<Interpolation::ProcessModel*>(&proc))
           interpolations++;
         else if (dynamic_cast<JS::ProcessModel*>(&proc))
@@ -83,11 +80,6 @@ GlobalStatistics::GlobalStatistics(const Scenario::IntervalModel& itv)
       scenarios++;
       visit(*scenar);
     }
-    else if (auto loop = dynamic_cast<Loop::ProcessModel*>(&proc))
-    {
-      loops++;
-      visit(*loop);
-    }
     else if (dynamic_cast<Interpolation::ProcessModel*>(&proc))
       interpolations++;
     else if (dynamic_cast<JS::ProcessModel*>(&proc))
@@ -117,7 +109,6 @@ void GlobalStatistics::visit(const Scenario::ProcessModel& scenar)
   mappings += st.mappings;
   scenarios += st.scenarios;
   scripts += st.scripts;
-  loops += st.loops;
   other += st.other;
 
   for (auto& itv : scenar.intervals)
@@ -135,14 +126,11 @@ void GlobalStatistics::visit(const Scenario::IntervalModel& itv)
     {
       visit(*scenar);
     }
-    else if (auto loop = dynamic_cast<Loop::ProcessModel*>(&proc))
-    {
-      visit(*loop);
-    }
   }
   curDepth--;
 }
 
+/*
 void GlobalStatistics::visit(const Loop::ProcessModel& loop)
 {
   states += 2;
@@ -159,5 +147,6 @@ void GlobalStatistics::visit(const Loop::ProcessModel& loop)
 
   visit(loop.interval());
 }
+*/
 
 }

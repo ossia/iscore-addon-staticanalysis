@@ -1,6 +1,5 @@
 #pragma once
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
-#include <Loop/LoopProcessModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 namespace stal
 {
@@ -25,7 +24,6 @@ struct ScenarioStatistics
   int64_t mappings{};
   int64_t scenarios{};
   int64_t scripts{};
-  int64_t loops{};
   int64_t other{};
 
   ScenarioStatistics(const Scenario::ProcessModel& scenar);
@@ -60,7 +58,6 @@ struct GlobalStatistics
 
   GlobalStatistics(const Scenario::IntervalModel& scenar);
   void visit(const Scenario::ProcessModel& scenar);
-  void visit(const Loop::ProcessModel& scenar);
   void visit(const Scenario::IntervalModel& scenar);
 };
 

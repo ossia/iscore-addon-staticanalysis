@@ -4,7 +4,6 @@
 #include <Explorer/Commands/Add/AddAddress.hpp>
 #include <Explorer/Commands/Add/AddDevice.hpp>
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
-#include <Loop/LoopProcessModel.hpp>
 #include <Protocols/OSC/OSCDevice.hpp>
 #include <Protocols/OSC/OSCProtocolFactory.hpp>
 #include <Protocols/OSC/OSCSpecificSettings.hpp>
@@ -223,6 +222,7 @@ void createTrigger(
   disp.submit(set_max_cmd);
 }
 
+/* TODO use the new method of creating loops
 static auto createPlace(
     CommandDispatcher<>& disp,
     const Scenario::ProcessModel& scenario,
@@ -263,6 +263,7 @@ static auto createPlace(
 
   return std::tie(pattern_state, scenario_pattern, loop_state, loop);
 }
+*/
 
 template <typename Scenario_T>
 void addConditionTrigger(
@@ -407,6 +408,7 @@ void generateScenarioFromPetriNet(
   }
 
   // create loops for each place
+  /*
   double pos_y = 0.05;
   Q_FOREACH (Place p, pList)
   {
@@ -462,6 +464,7 @@ void generateScenarioFromPetriNet(
       pos_y += 0.1;
     }
   }
+  */
 }
 
 void generateScenario(
