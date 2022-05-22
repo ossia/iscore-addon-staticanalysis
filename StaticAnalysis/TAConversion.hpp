@@ -11,7 +11,7 @@
 
 #include <QString>
 
-#include <eggs/variant.hpp>
+#include <ossia/detail/variant.hpp>
 
 #include <set>
 #include <sstream>
@@ -207,7 +207,7 @@ struct Rigid
   QString comment;
 };
 
-using Interval = eggs::variant<Rigid, Flexible>;
+using Interval = ossia::variant<Rigid, Flexible>;
 
 struct ScenarioContent
 {
