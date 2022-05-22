@@ -30,6 +30,7 @@
 #include <QChar>
 #include <QDebug>
 #include <QFile>
+#include <QMenu>
 #include <QFileDialog>
 #include <QMenu>
 #include <QJsonDocument>
@@ -40,6 +41,7 @@
 #include <StaticAnalysis/ScenarioGenerator.hpp>
 #include <StaticAnalysis/ScenarioMetrics.hpp>
 #include <StaticAnalysis/ScenarioVisitor.hpp>
+#include <StaticAnalysis/ReactiveIS.hpp>
 #include <StaticAnalysis/Statistics.hpp>
 #include <StaticAnalysis/TAConversion.hpp>
 #include <StaticAnalysis/TIKZConversion.hpp>
@@ -71,6 +73,23 @@ stal::ApplicationPlugin::ApplicationPlugin(
 
     stal::generateScenarioFromPetriNet(*firstScenario, disp);
   });
+  m_carlito = new QAction{tr("Scenario to ReactiveIS"), nullptr};
+  connect(m_carlito, &QAction::triggered, [&]() {
+    auto doc = currentDocument();
+    if (!doc)
+      return;
+    Scenario::ScenarioDocumentModel& base
+        = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
+
+    const auto& baseInterval = base.baseScenario().interval();
+    if (baseInterval.processes.size() == 0)
+      return;
+
+    QString text = stal::generateReactiveIS(base.baseScenario(), baseInterval);
+    Scenario::TextDialog dial(text, qApp->activeWindow());
+    dial.exec();
+  });
+
   m_generate = new QAction{tr("Generate random score"), nullptr};
   connect(m_generate, &QAction::triggered, [&]() {
     auto doc = currentDocument();
@@ -342,6 +361,7 @@ score::GUIElements stal::ApplicationPlugin::makeGUIElements()
   menu->addAction(m_MLexport);
   menu->addAction(m_CPPexport);
   menu->addAction(m_himito);
+  menu->addAction(m_carlito);
   menu->addAction(m_generate);
   menu->addAction(m_convert);
   menu->addAction(m_metrics);

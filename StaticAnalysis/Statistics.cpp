@@ -32,8 +32,8 @@ ScenarioStatistics::ScenarioStatistics(const Scenario::ProcessModel& scenar)
           mappings++;
         else if (dynamic_cast<Scenario::ProcessModel*>(&proc))
           scenarios++;
-        else if (dynamic_cast<Interpolation::ProcessModel*>(&proc))
-          interpolations++;
+        // else if (dynamic_cast<Interpolation::ProcessModel*>(&proc))
+        //  interpolations++;
         else if (dynamic_cast<JS::ProcessModel*>(&proc))
           scripts++;
         else
@@ -80,8 +80,8 @@ GlobalStatistics::GlobalStatistics(const Scenario::IntervalModel& itv)
       scenarios++;
       visit(*scenar);
     }
-    else if (dynamic_cast<Interpolation::ProcessModel*>(&proc))
-      interpolations++;
+    // else if (dynamic_cast<Interpolation::ProcessModel*>(&proc))
+    //   interpolations++;
     else if (dynamic_cast<JS::ProcessModel*>(&proc))
       scripts++;
     else

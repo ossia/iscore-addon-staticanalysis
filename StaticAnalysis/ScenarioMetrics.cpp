@@ -1331,7 +1331,7 @@ stal::Metrics::Cyclomatic::ComputeFactors(const Scenario::ProcessModel& scenar)
       });
 
   return stal::Metrics::Cyclomatic::Factors{
-      E_events + E_nodes, N, (int)programs.size()};
+      E_events + E_nodes, N, (int)std::ssize(programs)};
 }
 
 stal::Metrics::Cyclomatic::Factors stal::Metrics::Cyclomatic::ComputeFactors2(
@@ -1344,7 +1344,7 @@ stal::Metrics::Cyclomatic::Factors stal::Metrics::Cyclomatic::ComputeFactors2(
   int program_n = 0;
   int E = 0;
   int N = 0;
-  int P = programs.size();
+  int P = std::ssize(programs);
   for (const auto& program : programs)
   {
     CyclomaticVisitor vis2(program, scenar);

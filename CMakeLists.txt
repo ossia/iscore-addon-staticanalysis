@@ -13,6 +13,7 @@ set(HDRS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TAConversion.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TIKZConversion.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/CppGenerator.hpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ReactiveIS.hpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/score_addon_staticanalysis.hpp"
 )
 set(SRCS
@@ -23,6 +24,7 @@ set(SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TAConversion.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/TIKZConversion.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/CppGenerator.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/ReactiveIS.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/score_addon_staticanalysis.cpp"
 )
 

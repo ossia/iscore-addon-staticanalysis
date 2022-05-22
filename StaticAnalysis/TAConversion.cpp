@@ -224,20 +224,13 @@ static QString print(const ScenarioContent& c)
 
     output << "///// SYSTEM /////\n";
     output << "system\n";
-    ossia::for_each_in_tuple(
-        std::tie(
-            c.events,
-            c.events_nd,
-            c.rigids,
-            c.flexibles,
-            c.points,
-            c.mixs,
-            c.controls),
-        [&](const auto& vec) {
+    [&] (auto&&... tpl) {
+        auto f = [&](const auto& vec) {
           for (const auto& elt : vec)
             output << qUtf8Printable(elt.name) << ",\n";
-        });
-
+        };
+       (f(tpl), ...);
+    }(c.events, c.events_nd, c.rigids, c.flexibles, c.points, c.mixs, c.controls);
     auto lastStr = QString::fromStdString(output.str());
     lastStr[lastStr.size() - 2] = ';';
 

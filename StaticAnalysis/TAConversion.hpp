@@ -29,11 +29,12 @@ namespace TA
 {
 struct TAScenario;
 
-template <typename Object>
-QString name(const Object& obj)
+
+inline QString name(const QObject& obj)
 {
-  ObjectPath path = Path<Object>{obj}.unsafePath();
-  path.vec().erase(path.vec().begin(), path.vec().begin() + 3);
+  ObjectPath path = score::IDocument::unsafe_path(obj);
+
+  path.vec().erase(path.vec().begin(), path.vec().begin() + 2);
   std::reverse(path.vec().begin(), path.vec().end());
   for (ObjectIdentifier& elt : path.vec())
   {
@@ -51,7 +52,9 @@ QString name(const Object& obj)
       elt = ObjectIdentifier{"T", elt.id()};
   }
 
-  return path.toString().replace('/', "_").replace('.', "").prepend('_');
+  auto str = path.toString().replace('/', "_").replace('.', "");
+  str.resize(str.size() - 1);
+  return str;
 }
 
 using BroadcastVariable = QString;

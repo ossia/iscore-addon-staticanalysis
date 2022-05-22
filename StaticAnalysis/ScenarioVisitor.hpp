@@ -19,6 +19,7 @@ private:
   score::GUIElements makeGUIElements() override;
 
   QAction* m_himito{};
+  QAction* m_carlito{};
   QAction* m_generate{};
   QAction* m_convert{};
   QAction* m_metrics{};

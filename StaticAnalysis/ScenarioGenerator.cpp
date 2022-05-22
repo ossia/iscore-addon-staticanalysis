@@ -2,7 +2,7 @@
 
 #include <Device/Protocol/ProtocolList.hpp>
 #include <Explorer/Commands/Add/AddAddress.hpp>
-#include <Explorer/Commands/Add/AddDevice.hpp>
+// #include <Explorer/Commands/Add/AddDevice.hpp>
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Protocols/OSC/OSCDevice.hpp>
 #include <Protocols/OSC/OSCProtocolFactory.hpp>
@@ -109,8 +109,8 @@ createTree(CommandDispatcher<>& disp, const score::DocumentContext& ctx)
   // First create a device
   auto settings = settings_factory->defaultSettings();
   settings.name = "local";
-  auto create_dev_cmd = new Explorer::Command::AddDevice(tree, settings);
-  disp.submit(create_dev_cmd);
+  // auto create_dev_cmd = new Explorer::Command::AddDevice(tree, settings);
+  // disp.submit(create_dev_cmd);
 
   return tree;
 }

@@ -49,7 +49,16 @@ class CPPVisitor
   }
 
   template<typename... Args>
-  void addLine(Args&&... args) { text += QString(2 * indent, ' ') + QString::fromStdString(fmt::format(std::forward<Args>(args)...)) + "\n"; }
+  void addLine(fmt::format_string<Args...> str, Args&&... args) {
+    text += QString(2 * indent, ' ') +
+        QString::fromStdString(
+          fmt::format(str, std::forward<Args>(args)...)
+          ) + "\n";
+  }
+
+  void addLine(const char* str) {
+    text += QString(2 * indent, ' ') + str + "\n";
+  }
 
 public:
   QString text;
