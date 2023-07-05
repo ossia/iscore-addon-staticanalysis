@@ -1,12 +1,16 @@
 #include "ReactiveIS.hpp"
+
 #include "TAConversion.hpp"
 
-#include <Automation/AutomationModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Scenario/Process/Algorithms/ContainersAccessors.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
+
+#include <Automation/AutomationModel.hpp>
+
+#include <fmt/format.h>
 namespace stal
 {
 using namespace TA;
@@ -31,7 +35,6 @@ structure : scenario {
 
 */
 
-
 struct ISVisitor
 {
   std::string ss;
@@ -44,19 +47,17 @@ struct ISVisitor
     ss += '\n';
   }
 
-
-  void prop(std::string k, std::string v)
-  {
-    append(k + " : " + v + " ;");
-  }
+  void prop(std::string k, std::string v) { append(k + " : " + v + " ;"); }
 
   auto object(std::string type, std::string name)
   {
     append(type + " : " + name + "{");
-    depth ++;
-    struct X {
+    depth++;
+    struct X
+    {
       ISVisitor& self;
-      ~X() {
+      ~X()
+      {
         self.depth--;
         self.append("}");
       }
@@ -66,39 +67,40 @@ struct ISVisitor
 
   std::string space() const;
 
-
   void visitProcesses(const Scenario::IntervalModel& c)
   {
-    for (const auto& process : c.processes)
+    for(const auto& process : c.processes)
     {
-      if (auto scenario = dynamic_cast<const Scenario::ProcessModel*>(&process))
+      if(auto scenario = dynamic_cast<const Scenario::ProcessModel*>(&process))
       {
         this->visit(*scenario);
       }
-      else if (auto autom = dynamic_cast<const Automation::ProcessModel*>(&process))
+      else if(auto autom = dynamic_cast<const Automation::ProcessModel*>(&process))
       {
         this->visit(*autom);
       }
     }
   }
-  void visit(const Scenario::ScenarioInterface& scenario, const Scenario::TimeSyncModel& timenode);
-  void visit(const Scenario::ScenarioInterface& scenario, const Scenario::EventModel& event);
-  void visit(const Scenario::ScenarioInterface& scenario, const Scenario::IntervalModel& c);
-  void visit(const Scenario::ScenarioInterface& scenario, const Scenario::StateModel& state);
+  void visit(
+      const Scenario::ScenarioInterface& scenario,
+      const Scenario::TimeSyncModel& timenode);
+  void
+  visit(const Scenario::ScenarioInterface& scenario, const Scenario::EventModel& event);
+  void
+  visit(const Scenario::ScenarioInterface& scenario, const Scenario::IntervalModel& c);
+  void
+  visit(const Scenario::ScenarioInterface& scenario, const Scenario::StateModel& state);
   void visit(const Scenario::ScenarioInterface& s);
   void visit(const Automation::ProcessModel& s);
 };
-
-
-
-
 
 std::string ISVisitor::space() const
 {
   return std::string(depth, ' ');
 }
 
-void ISVisitor::visit(const Scenario::ScenarioInterface& scenario, const Scenario::TimeSyncModel& timenode)
+void ISVisitor::visit(
+    const Scenario::ScenarioInterface& scenario, const Scenario::TimeSyncModel& timenode)
 {
   using namespace Scenario;
   // First we create a point for the timenode. The ingoing
@@ -107,40 +109,40 @@ void ISVisitor::visit(const Scenario::ScenarioInterface& scenario, const Scenari
   QString tn_name = name(timenode);
   ;
 
-  if (timenode.active())
+  if(timenode.active())
   {
-     timenode.expression();
+    timenode.expression();
   }
   else
   {
-
   }
-
 
   auto prev_csts = previousIntervals(timenode, scenario);
-  if (prev_csts.size() > 1)
+  if(prev_csts.size() > 1)
   {
   }
-  else if (prev_csts.size() == 1)
+  else if(prev_csts.size() == 1)
   {
   }
   else
   {
     SCORE_ABORT;
   }
-
 }
 
-void ISVisitor::visit(const Scenario::ScenarioInterface& scenario, const Scenario::EventModel& event)
+void ISVisitor::visit(
+    const Scenario::ScenarioInterface& scenario, const Scenario::EventModel& event)
 {
   using namespace Scenario;
   const auto& timenode = parentTimeSync(event, scenario);
   QString tn_name = name(timenode);
   QString event_name = name(event);
-
 }
 
-void ISVisitor::visit(const Scenario::ScenarioInterface& scenario, const Scenario::StateModel& state) {}
+void ISVisitor::visit(
+    const Scenario::ScenarioInterface& scenario, const Scenario::StateModel& state)
+{
+}
 
 void ISVisitor::visit(const Scenario::ScenarioInterface& s)
 {
@@ -163,24 +165,20 @@ void ISVisitor::visit(const Scenario::ScenarioInterface& s)
   }
   */
 
-  for (const auto& interval : s.getIntervals())
+  for(const auto& interval : s.getIntervals())
   {
     visit(s, interval);
   }
-
 }
 
 void ISVisitor::visit(const Automation::ProcessModel& s)
 {
   auto scenar = object("texture", name(s).toStdString());
   prop("name", "\"" + name(s).toStdString() + "\"");
-
-
-
-
 }
 
-void ISVisitor::visit(const Scenario::ScenarioInterface& scenario, const Scenario::IntervalModel& c)
+void ISVisitor::visit(
+    const Scenario::ScenarioInterface& scenario, const Scenario::IntervalModel& c)
 {
   using namespace Scenario;
   auto& stn = startTimeSync(c, scenario);
@@ -210,11 +208,10 @@ void ISVisitor::visit(const Scenario::ScenarioInterface& scenario, const Scenari
       for(const auto& id : prev_itv)
       {
         auto& itv = scenario.interval(id);
-        condition += fmt::format("wait(start({}), {}, {}) /\\",
-                                  name(itv).toStdString(),
-                                 (int)itv.duration.minDuration().msec(),
-                                 (int)itv.duration.maxDuration().msec()
-                                 );
+        condition += fmt::format(
+            "wait(start({}), {}, {}) /\\", name(itv).toStdString(),
+            (int)itv.duration.minDuration().msec(),
+            (int)itv.duration.maxDuration().msec());
       }
 
       condition.resize(condition.size() - 3);
@@ -233,7 +230,7 @@ void ISVisitor::visit(const Scenario::ScenarioInterface& scenario, const Scenari
     append("content: [");
     ++depth;
 
-    if (c.duration.isRigid())
+    if(c.duration.isRigid())
     {
       visitProcesses(c);
     }
@@ -247,8 +244,8 @@ void ISVisitor::visit(const Scenario::ScenarioInterface& scenario, const Scenari
   }
 }
 
-
-QString generateReactiveIS(const Scenario::ScenarioInterface& scenar, const Scenario::IntervalModel& root)
+QString generateReactiveIS(
+    const Scenario::ScenarioInterface& scenar, const Scenario::IntervalModel& root)
 {
   ISVisitor v;
   v.visit(scenar, root);

@@ -1,4 +1,5 @@
 #include "CppGenerator.hpp"
+
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/Interval/IntervalModel.hpp>
 #include <Scenario/Document/State/StateModel.hpp>
@@ -9,7 +10,9 @@
 #include <score/model/path/Path.hpp>
 
 #include <ossia/detail/algorithms.hpp>
+
 #include <fmt/format.h>
+// clang-format off
 namespace stal
 {
 class CPPVisitor
@@ -90,7 +93,7 @@ public:
     {
       if(&ts == &proc.startTimeSync())
       {
-        addLine("const auto& {} = {}.get_start_time_sync();", this->id(ts), this->id(proc));
+        addLine("const auto& {} = {}->get_start_time_sync();", this->id(ts), this->id(proc));
       }
       else
       {
@@ -105,7 +108,7 @@ public:
     {
       if(&ev == &proc.startEvent())
       {
-        addLine("const auto& {} = *{}.get_start_time_sync()->get_time_events().begin();", this->id(ev), this->id(proc));
+        addLine("const auto& {} = *{}->get_start_time_sync()->get_time_events().begin();", this->id(ev), this->id(proc));
       }
       else
       {

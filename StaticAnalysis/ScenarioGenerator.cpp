@@ -1,12 +1,11 @@
 #include "ScenarioGenerator.hpp"
 
 #include <Device/Protocol/ProtocolList.hpp>
+
 #include <Explorer/Commands/Add/AddAddress.hpp>
 #include <Explorer/Commands/Add/LoadDevice.hpp>
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
-#include <Protocols/OSC/OSCDevice.hpp>
-#include <Protocols/OSC/OSCProtocolFactory.hpp>
-#include <Protocols/OSC/OSCSpecificSettings.hpp>
+
 #include <Scenario/Commands/Interval/AddProcessToInterval.hpp>
 #include <Scenario/Commands/Interval/SetMaxDuration.hpp>
 #include <Scenario/Commands/Interval/SetMinDuration.hpp>
@@ -23,14 +22,19 @@
 #include <Scenario/Process/ScenarioModel.hpp>
 #include <Scenario/Process/ScenarioProcessMetadata.hpp>
 
+#include <Protocols/OSC/OSCDevice.hpp>
+#include <Protocols/OSC/OSCProtocolFactory.hpp>
+#include <Protocols/OSC/OSCSpecificSettings.hpp>
+
+#include <score/application/GUIApplicationContext.hpp>
 #include <score/document/DocumentContext.hpp>
 #include <score/model/path/PathSerialization.hpp>
 
 #include <QFile>
 #include <QFileDialog>
 #include <QJsonArray>
-#include <QJsonObject>
 #include <QJsonDocument>
+#include <QJsonObject>
 
 #include <iterator>
 #include <random>
@@ -68,9 +72,9 @@ struct random_selector
   // convenience function that works on anything with a sensible begin() and
   // end(), and returns with a ref to the value type
   template <typename Container>
-  auto operator()(const Container& c) -> decltype(*begin(c).value().first)&
+  auto operator()(const Container& c) -> decltype(*begin(c)->second)&
   {
-    return *select(begin(c), end(c)).value().first;
+    return *select(begin(c), end(c))->second;
   }
 
 private:
@@ -95,8 +99,7 @@ public:
   }
 };
 
-static auto&
-createTree(CommandDispatcher<>& disp, const score::DocumentContext& ctx)
+static auto& createTree(CommandDispatcher<>& disp, const score::DocumentContext& ctx)
 {
   // Create a tree
   // Get necessary objects : OSC device factory, root node, etc.
@@ -117,9 +120,7 @@ createTree(CommandDispatcher<>& disp, const score::DocumentContext& ctx)
 
 template <typename Val>
 auto createTreeNode(
-    CommandDispatcher<>& disp,
-    Explorer::DeviceDocumentPlugin& tree,
-    QString name,
+    CommandDispatcher<>& disp, Explorer::DeviceDocumentPlugin& tree, QString name,
     Val&& value)
 {
   // Find the created device
@@ -142,11 +143,8 @@ auto createTreeNode(
 
 template <typename Val>
 auto addMessageToState(
-    CommandDispatcher<>& disp,
-    Scenario::StateModel& state,
-    QString device,
-    QString address,
-    Val&& value)
+    CommandDispatcher<>& disp, Scenario::StateModel& state, QString device,
+    QString address, Val&& value)
 {
   auto cmd = new Scenario::Command::AddMessagesToState(
       state,
@@ -162,11 +160,8 @@ auto addMessageToState(
 }
 
 static auto createInterval(
-    CommandDispatcher<>& disp,
-    const Scenario::ProcessModel& scenario,
-    const Scenario::StateModel& startState,
-    const int duration,
-    double posY)
+    CommandDispatcher<>& disp, const Scenario::ProcessModel& scenario,
+    const Scenario::StateModel& startState, const int duration, double posY)
 {
 
   using namespace Scenario;
@@ -184,7 +179,7 @@ static auto createInterval(
       Scenario::parentEvent(new_state, scenario).date()
           + TimeVal::fromMsecs(duration), // duration
       posY,
-      false);                              // y-pos in %
+      false); // y-pos in %
   disp.submit(state_command);
 
   return state_command;
@@ -192,10 +187,8 @@ static auto createInterval(
 
 template <typename Scenario_T>
 void createTrigger(
-    CommandDispatcher<>& disp,
-    const Scenario_T& scenario,
-    const Scenario::StateModel& state,
-    const TimeVal& min_duration,
+    CommandDispatcher<>& disp, const Scenario_T& scenario,
+    const Scenario::StateModel& state, const TimeVal& min_duration,
     const TimeVal& max_duration)
 {
   using namespace Scenario;
@@ -209,15 +202,12 @@ void createTrigger(
   using namespace ossia;
   // Change Minimum Duration
   auto set_min_cmd = new SetMinDuration(
-      scenario.interval(*state.previousInterval()),
-      min_duration,
-      min_duration == 0_tv);
+      scenario.interval(*state.previousInterval()), min_duration, min_duration == 0_tv);
   disp.submit(set_min_cmd);
 
   // Change Maximum Duration
   auto set_max_cmd = new SetMaxDuration(
-      scenario.interval(*state.previousInterval()),
-      max_duration,
+      scenario.interval(*state.previousInterval()), max_duration,
       max_duration.infinite());
   disp.submit(set_max_cmd);
 }
@@ -267,16 +257,14 @@ static auto createPlace(
 
 template <typename Scenario_T>
 void addConditionTrigger(
-    CommandDispatcher<>& disp,
-    const Scenario_T& scenario,
-    const Scenario::StateModel& state,
-    QList<QString> tList)
+    CommandDispatcher<>& disp, const Scenario_T& scenario,
+    const Scenario::StateModel& state, QList<QString> tList)
 {
   using namespace Scenario;
   using namespace Scenario::Command;
 
   QList<QString> condition;
-  Q_FOREACH (QString atom, tList)
+  Q_FOREACH(QString atom, tList)
   {
     condition << "local:/" + atom + "==1";
   }
@@ -284,7 +272,7 @@ void addConditionTrigger(
 
   // Try to parse an expression; if it is correctly parsed, add the time node
   auto maybe_parsed_expression = State::parseExpression(expression);
-  if (maybe_parsed_expression)
+  if(maybe_parsed_expression)
   {
     // 4. Set the expression to the trigger
     auto& timenode = parentTimeSync(state, scenario);
@@ -294,12 +282,9 @@ void addConditionTrigger(
 }
 
 static auto& createTransition(
-    CommandDispatcher<>& disp,
-    const Scenario::ProcessModel& scenario,
-    const Scenario::StateModel& startState,
-    const TimeVal& min_duration,
-    const TimeVal& max_duration,
-    double posY)
+    CommandDispatcher<>& disp, const Scenario::ProcessModel& scenario,
+    const Scenario::StateModel& startState, const TimeVal& min_duration,
+    const TimeVal& max_duration, double posY)
 {
   using namespace Scenario;
   using namespace Scenario::Command;
@@ -317,7 +302,7 @@ static auto& createTransition(
 static QList<QString> JsonArrayToStringList(QJsonArray list)
 {
   QList<QString> output;
-  Q_FOREACH (QJsonValue s, list)
+  for(QJsonValue s : list)
   {
     output << s.toString();
   }
@@ -332,7 +317,7 @@ static QJsonObject loadJsonFile()
 
   // load JSON file
   QFile jsonFile(filename);
-  if (!jsonFile.open(QIODevice::ReadOnly | QIODevice::Text))
+  if(!jsonFile.open(QIODevice::ReadOnly | QIODevice::Text))
   {
     qWarning("Couldn't open save file.");
     return QJsonObject();
@@ -346,32 +331,28 @@ static QJsonObject loadJsonFile()
 }
 
 void generateScenarioFromPetriNet(
-    const Scenario::ProcessModel& scenario,
-    CommandDispatcher<>& disp)
+    const Scenario::ProcessModel& scenario, CommandDispatcher<>& disp)
 {
   using namespace Scenario;
   using namespace Scenario::Command;
 
   // Load JSON file
   QJsonObject json = loadJsonFile();
-  if (json.isEmpty())
+  if(json.isEmpty())
   {
     return;
   }
 
   // Create Device Tree
-  auto& device_tree
-      = createTree(disp, score::IDocument::documentContext(scenario));
+  auto& device_tree = createTree(disp, score::IDocument::documentContext(scenario));
 
   // Load Transitions
   QJsonArray transitionsArray = json["transitions"].toArray();
-  for (int tIndex = 0; tIndex < transitionsArray.size(); ++tIndex)
+  for(int tIndex = 0; tIndex < transitionsArray.size(); ++tIndex)
   {
     QJsonObject tObject = transitionsArray[tIndex].toObject();
     createTreeNode(
-        disp,
-        device_tree,
-        tObject["name"].toString(),
+        disp, device_tree, tObject["name"].toString(),
         false); // adding transition variable to device tree
   }
 
@@ -388,7 +369,7 @@ void generateScenarioFromPetriNet(
   QJsonArray placesArray = json["places"].toArray();
   QList<Place> pList;
   QList<QString> finalTransitions, initialTransitions;
-  for (int pIndex = 0; pIndex < placesArray.size(); ++pIndex)
+  for(int pIndex = 0; pIndex < placesArray.size(); ++pIndex)
   {
     QJsonObject pObject = placesArray[pIndex].toObject();
     Place p;
@@ -397,11 +378,11 @@ void generateScenarioFromPetriNet(
     p.pre = JsonArrayToStringList(pObject["pre"].toArray());
     pList.append(p);
 
-    if (p.pos.empty())
+    if(p.pos.empty())
     { // it's final place
       finalTransitions = p.pre;
     }
-    else if (p.pre.empty())
+    else if(p.pre.empty())
     { // it's initial place
       initialTransitions = p.pos;
     }
@@ -468,26 +449,23 @@ void generateScenarioFromPetriNet(
 }
 
 void generateScenario(
-    const Scenario::ProcessModel& scenar,
-    int N,
-    CommandDispatcher<>& disp)
+    const Scenario::ProcessModel& scenar, int N, CommandDispatcher<>& disp)
 {
   using namespace Scenario;
   disp.submit(new Command::CreateState(scenar, scenar.startEvent().id(), 0.5));
 
   random_selector<> selector{};
 
-  for (int i = 0; i < N; i++)
+  for(int i = 0; i < N; i++)
   {
     int randn = rand() % 2;
     double y = (rand() % 1000) / 1200.;
-    switch (randn)
+    switch(randn)
     {
-      case 0:
-      {
+      case 0: {
         // Get a random state to start from;
         StateModel& state = selector(scenar.states.get());
-        if (!state.nextInterval())
+        if(!state.nextInterval())
         {
           const TimeSyncModel& parentNode = parentTimeSync(state, scenar);
           Id<StateModel> state_id = state.id();
@@ -497,8 +475,7 @@ void generateScenario(
         }
         break;
       }
-      case 1:
-      {
+      case 1: {
         EventModel& event = selector(scenar.events.get());
         disp.submit(new Command::CreateState(scenar, event.id(), y));
 
@@ -508,7 +485,7 @@ void generateScenario(
         break;
     }
   }
-  for (int i = 0; i < N / 3; i++)
+  for(int i = 0; i < N / 3; i++)
   {
     StateModel& state1 = selector(scenar.states.get());
     StateModel& state2 = selector(scenar.states.get());
@@ -516,25 +493,23 @@ void generateScenario(
     auto t1 = tn1.date();
     auto& tn2 = Scenario::parentTimeSync(state2, scenar);
     auto t2 = tn2.date();
-    if (t1 < t2)
+    if(t1 < t2)
     {
-      if (!state2.previousInterval() && !state1.nextInterval())
-        disp.submit(
-            new Command::CreateInterval(scenar, state1.id(), state2.id()));
+      if(!state2.previousInterval() && !state1.nextInterval())
+        disp.submit(new Command::CreateInterval(scenar, state1.id(), state2.id()));
     }
-    else if (t1 > t2)
+    else if(t1 > t2)
     {
-      if (!state1.previousInterval() && !state2.nextInterval())
-        disp.submit(
-            new Command::CreateInterval(scenar, state2.id(), state1.id()));
+      if(!state1.previousInterval() && !state2.nextInterval())
+        disp.submit(new Command::CreateInterval(scenar, state2.id(), state1.id()));
     }
   }
-  for (auto i = 0; i < N / 5; i++)
+  for(auto i = 0; i < N / 5; i++)
   {
     StateModel& state1 = selector(scenar.states.get());
     auto& tn1 = Scenario::parentTimeSync(state1, scenar);
 
-    if (tn1.active())
+    if(tn1.active())
       continue;
     disp.submit(new Command::AddTrigger<ProcessModel>(tn1));
   }

@@ -1,5 +1,9 @@
+#include <State/Message.hpp>
+#include <State/Value.hpp>
+
 #include <Process/Process.hpp>
 #include <Process/State/MessageNode.hpp>
+
 #include <Scenario/Application/Menus/TextDialog.hpp>
 #include <Scenario/Document/BaseScenario/BaseScenario.hpp>
 #include <Scenario/Document/Event/EventModel.hpp>
@@ -11,8 +15,6 @@
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/Algorithms/Accessors.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
-#include <State/Message.hpp>
-#include <State/Value.hpp>
 
 #include <score/actions/ActionManager.hpp>
 #include <score/actions/Menu.hpp>
@@ -30,43 +32,41 @@
 #include <QChar>
 #include <QDebug>
 #include <QFile>
-#include <QMenu>
 #include <QFileDialog>
-#include <QMenu>
 #include <QJsonDocument>
+#include <QMenu>
 #include <QSaveFile>
 #include <QString>
 
 #include <StaticAnalysis/CppGenerator.hpp>
+#include <StaticAnalysis/ReactiveIS.hpp>
 #include <StaticAnalysis/ScenarioGenerator.hpp>
 #include <StaticAnalysis/ScenarioMetrics.hpp>
 #include <StaticAnalysis/ScenarioVisitor.hpp>
-#include <StaticAnalysis/ReactiveIS.hpp>
 #include <StaticAnalysis/Statistics.hpp>
 #include <StaticAnalysis/TAConversion.hpp>
 #include <StaticAnalysis/TIKZConversion.hpp>
 
 #include <sstream>
 
-stal::ApplicationPlugin::ApplicationPlugin(
-    const score::GUIApplicationContext& app)
+stal::ApplicationPlugin::ApplicationPlugin(const score::GUIApplicationContext& app)
     : score::GUIApplicationPlugin{app}
 {
   m_himito = new QAction{tr("Generate scenario from Petri Net"), nullptr};
   connect(m_himito, &QAction::triggered, [&]() {
     auto doc = currentDocument();
-    if (!doc)
+    if(!doc)
       return;
     Scenario::ScenarioDocumentModel& base
         = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
 
     const auto& baseInterval = base.baseScenario().interval();
-    if (baseInterval.processes.size() == 0)
+    if(baseInterval.processes.size() == 0)
       return;
 
-    auto firstScenario = dynamic_cast<Scenario::ProcessModel*>(
-        &*baseInterval.processes.begin());
-    if (!firstScenario)
+    auto firstScenario
+        = dynamic_cast<Scenario::ProcessModel*>(&*baseInterval.processes.begin());
+    if(!firstScenario)
       return;
 
     CommandDispatcher<> disp(doc->context().commandStack);
@@ -76,13 +76,13 @@ stal::ApplicationPlugin::ApplicationPlugin(
   m_carlito = new QAction{tr("Scenario to ReactiveIS"), nullptr};
   connect(m_carlito, &QAction::triggered, [&]() {
     auto doc = currentDocument();
-    if (!doc)
+    if(!doc)
       return;
     Scenario::ScenarioDocumentModel& base
         = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
 
     const auto& baseInterval = base.baseScenario().interval();
-    if (baseInterval.processes.size() == 0)
+    if(baseInterval.processes.size() == 0)
       return;
 
     QString text = stal::generateReactiveIS(base.baseScenario(), baseInterval);
@@ -93,18 +93,18 @@ stal::ApplicationPlugin::ApplicationPlugin(
   m_generate = new QAction{tr("Generate random score"), nullptr};
   connect(m_generate, &QAction::triggered, [&]() {
     auto doc = currentDocument();
-    if (!doc)
+    if(!doc)
       return;
     Scenario::ScenarioDocumentModel& base
         = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
 
     const auto& baseInterval = base.baseScenario().interval();
-    if (baseInterval.processes.size() == 0)
+    if(baseInterval.processes.size() == 0)
       return;
 
-    auto firstScenario = dynamic_cast<Scenario::ProcessModel*>(
-        &*baseInterval.processes.begin());
-    if (!firstScenario)
+    auto firstScenario
+        = dynamic_cast<Scenario::ProcessModel*>(&*baseInterval.processes.begin());
+    if(!firstScenario)
       return;
 
     CommandDispatcher<> disp(doc->context().commandStack);
@@ -142,7 +142,7 @@ stal::ApplicationPlugin::ApplicationPlugin(
   m_convert = new QAction{tr("Convert to Temporal Automatas"), nullptr};
   connect(m_convert, &QAction::triggered, [&]() {
     auto doc = currentDocument();
-    if (!doc)
+    if(!doc)
       return;
     Scenario::ScenarioDocumentModel& base
         = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
@@ -160,7 +160,7 @@ stal::ApplicationPlugin::ApplicationPlugin(
   m_metrics = new QAction{tr("Scenario metrics"), nullptr};
   connect(m_metrics, &QAction::triggered, [&]() {
     auto doc = currentDocument();
-    if (!doc)
+    if(!doc)
       return;
 
     Scenario::ScenarioDocumentModel& base
@@ -175,19 +175,16 @@ stal::ApplicationPlugin::ApplicationPlugin(
     // Halstead
     {
       auto factors = Halstead::ComputeFactors(baseScenario);
-      str += "Difficulty = " + QString::number(Halstead::Difficulty(factors))
-             + "\n";
+      str += "Difficulty = " + QString::number(Halstead::Difficulty(factors)) + "\n";
       str += "Volume = " + QString::number(Halstead::Volume(factors)) + "\n";
       str += "Effort = " + QString::number(Halstead::Effort(factors)) + "\n";
-      str += "TimeRequired = "
-             + QString::number(Halstead::TimeRequired(factors)) + "\n";
+      str += "TimeRequired = " + QString::number(Halstead::TimeRequired(factors)) + "\n";
       str += "Bugs2 = " + QString::number(Halstead::Bugs2(factors)) + "\n";
     }
     // Cyclomatic
     {
       auto factors = Cyclomatic::ComputeFactors(baseScenario);
-      str += "Cyclomatic1 = "
-             + QString::number(Cyclomatic::Complexity(factors));
+      str += "Cyclomatic1 = " + QString::number(Cyclomatic::Complexity(factors));
     }
     // Display
     Scenario::TextDialog dial(str, qApp->activeWindow());
@@ -197,7 +194,7 @@ stal::ApplicationPlugin::ApplicationPlugin(
   m_TIKZexport = new QAction{tr("Export in TIKZ"), nullptr};
   connect(m_TIKZexport, &QAction::triggered, [&]() {
     auto doc = currentDocument();
-    if (!doc)
+    if(!doc)
       return;
     Scenario::ScenarioDocumentModel& base
         = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
@@ -206,20 +203,20 @@ stal::ApplicationPlugin::ApplicationPlugin(
 
     QFileDialog d{qApp->activeWindow(), tr("Save Document As")};
     d.setNameFilter(("tex files (*.tex)"));
-    d.setConfirmOverwrite(true);
+    d.setOption(QFileDialog::DontConfirmOverwrite, false);
     d.setFileMode(QFileDialog::AnyFile);
     d.setAcceptMode(QFileDialog::AcceptSave);
 
-    if (d.exec())
+    if(d.exec())
     {
       auto files = d.selectedFiles();
       QString savename = files.first();
       QString name = savename;
       name.remove(0, savename.lastIndexOf("/") + 1);
       name.remove(".tex");
-      if (!savename.isEmpty())
+      if(!savename.isEmpty())
       {
-        if (!savename.contains(".tex"))
+        if(!savename.contains(".tex"))
           savename += ".tex";
 
         QSaveFile f{savename};
@@ -238,14 +235,13 @@ stal::ApplicationPlugin::ApplicationPlugin(
         auto doc = currentDocument();
         Scenario::ScenarioDocumentModel& base
             = score::IDocument::get<Scenario::ScenarioDocumentModel>(*doc);
-        ExplorerStatistics e{
-            doc->context().plugin<Explorer::DeviceDocumentPlugin>()};
+        ExplorerStatistics e{doc->context().plugin<Explorer::DeviceDocumentPlugin>()};
         GlobalStatistics g{base.baseInterval()};
 
         QString str;
         str += "Devices\n=======\n\n";
         str += "Device Nodes NonLeaf MaxDepth MaxCld AvgCld AvgNCld\n";
-        for (const DeviceStatistics& dev : e.devices)
+        for(const DeviceStatistics& dev : e.devices)
         {
 
           str += dev.name + " ";
@@ -260,7 +256,7 @@ stal::ApplicationPlugin::ApplicationPlugin(
 
         str += "\n\n";
         str += "Device Empty Int Impulse Float Bool Vec2F Vec3F Vec4F Tuple String Char\n";
-        for (const DeviceStatistics& dev : e.devices)
+        for(const DeviceStatistics& dev : e.devices)
         {
           str += dev.name + " ";
           str += QString::number(dev.containers) + " ";
@@ -321,7 +317,7 @@ stal::ApplicationPlugin::ApplicationPlugin(
   m_MLexport = new QAction{tr("To ML"), nullptr};
   connect(m_MLexport, &QAction::triggered, [&]() {
     auto doc = currentDocument();
-    if (!doc)
+    if(!doc)
       return;
 
     Scenario::ScenarioDocumentModel& base
@@ -338,7 +334,7 @@ stal::ApplicationPlugin::ApplicationPlugin(
   m_CPPexport = new QAction{tr("To ossia"), nullptr};
   connect(m_CPPexport, &QAction::triggered, [&]() {
     auto doc = currentDocument();
-    if (!doc)
+    if(!doc)
       return;
 
     Scenario::ScenarioDocumentModel& base
@@ -358,6 +354,7 @@ score::GUIElements stal::ApplicationPlugin::makeGUIElements()
 {
   auto& m = context.menus.get().at(score::Menus::Export());
   QMenu* menu = m.menu();
+
   menu->addAction(m_MLexport);
   menu->addAction(m_CPPexport);
   menu->addAction(m_himito);

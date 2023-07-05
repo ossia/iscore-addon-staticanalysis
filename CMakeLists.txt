@@ -28,7 +28,7 @@ set(SRCS
 "${CMAKE_CURRENT_SOURCE_DIR}/score_addon_staticanalysis.cpp"
 )
 
-qt5_add_resources(QRCS "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/Resources/TAResources.qrc")
+qt_add_resources(QRCS "${CMAKE_CURRENT_SOURCE_DIR}/StaticAnalysis/Resources/TAResources.qrc")
 add_library(${PROJECT_NAME} ${SRCS} ${HDRS} ${QRCS})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC

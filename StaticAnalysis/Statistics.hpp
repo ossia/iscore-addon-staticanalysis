@@ -194,9 +194,9 @@ struct DeviceStatistics
                   tuple_addr++;
                   break;
                 }
-                case ossia::val_type::CHAR:
-                  char_addr++;
-                  break;
+                // case ossia::val_type::CHAR:
+                //   char_addr++;
+                //   break;
                 case ossia::val_type::STRING:
                   string_addr++;
                   break;
