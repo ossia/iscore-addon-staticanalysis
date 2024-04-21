@@ -3,6 +3,9 @@ project(score_addon_staticanalysis LANGUAGES CXX)
 if(NOT TARGET score_plugin_engine)
     return()
 endif()
+if(NOT TARGET score_plugin_js)
+    return()
+endif()
 score_common_setup()
 
 # Files & main target
